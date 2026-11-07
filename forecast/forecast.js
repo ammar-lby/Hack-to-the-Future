@@ -11,6 +11,7 @@ function forecast(data, options = {}) {
   const buffer = options.buffer ?? 0; // balance below this counts as a risk
   const extra = options.extra || []; // [{ date, amount, name }] for "Can I afford it?"
   const billChanges = options.billChanges || {}; // { "Rent": 700 } for "simulate next week"
+  const payChanges = options.payChanges || {}; // { "2026-11-09": 180 } overrides one payday (both lines)
 
   const p = data.persona;
   const tx = data.transactions;
@@ -47,9 +48,12 @@ function forecast(data, options = {}) {
     badCase -= dailySpend;
 
     if (date.getUTCDay() === payWeekday) {
-      expected += income.typical;
-      badCase += income.low;
-      events.push({ name: "Pay", amount: income.typical, lowAmount: income.low });
+      const changed = payChanges[iso];
+      const pay = changed ?? income.typical;
+      const lowPay = changed ?? income.low;
+      expected += pay;
+      badCase += lowPay;
+      events.push({ name: "Pay", amount: pay, lowAmount: lowPay, ...(changed != null ? { changed: true } : {}) });
     }
 
     for (const bill of data.knownBills) {
@@ -105,6 +109,18 @@ function forecast(data, options = {}) {
     const weeksUntil = Math.max(1, Math.floor(daysBetween(today, parseDate(first.worst.date)) / 7));
     const perWeek = Math.ceil(shortfall / weeksUntil);
 
+    // "Why am I seeing this?": everything the warning is based on, so the user can check it.
+    const why = {
+      payRange: { low: income.low, typical: income.typical, high: income.high, weeksOfHistory: income.weeksOfHistory },
+      billsThatWeek: timeline
+        .filter((d) => parseDate(d.date) >= windowStart && parseDate(d.date) <= addDays(parseDate(first.week), 6))
+        .flatMap((d) => d.events.filter((e) => e.amount < 0).map((e) => ({ name: e.name, amount: -e.amount, date: d.date }))),
+      everydaySpendPerWeek: round(dailySpend * 7),
+      lowestExpected: worst.expected,
+      lowestBadCase: worst.badCase,
+      explanation: `In a slow week you earn about £${Math.round(income.low)}. ${billNames.length ? listText(billNames) + " land close together, " : ""}so your balance could drop ${worst.badCase < 0 ? `£${Math.round(-worst.badCase)} below zero` : `to £${Math.round(worst.badCase)}`}.`,
+    };
+
     return {
       week: first.week,
       firstDay: first.worst.date,
@@ -117,6 +133,7 @@ function forecast(data, options = {}) {
       fix: `Save £${perWeek} a week for ${weeksUntil} weeks`,
       saveWeekly: perWeek,
       weeksUntil,
+      why,
     };
   });
 
@@ -147,6 +164,64 @@ function canIAfford(data, { date, amount, name }) {
   };
 }
 
+// "Simulate next week" (proactive alert demo): the landlord puts rent up and next week is slow.
+// Re-runs the forecast and reports what changed, so the app can show a new Future You alert.
+function simulateNextWeek(data, change = {}) {
+  const rentName = change.billName || "Rent";
+  const rentBill = data.knownBills.find((b) => b.name === rentName);
+  const newRent = change.newAmount ?? (rentBill ? rentBill.amount + 50 : 0);
+  const before = forecast(data);
+
+  // The next payday after "today", paid at the slow-week level or the amount given.
+  const today = parseDate(data.persona.today);
+  const payWeekday = mostCommon(data.transactions.filter((t) => t.type === "income").map((t) => parseDate(t.date).getUTCDay()));
+  let nextPay = addDays(today, 1);
+  while (nextPay.getUTCDay() !== payWeekday) nextPay = addDays(nextPay, 1);
+  const slowPay = change.nextPay ?? Math.round(before.income.low * 0.75);
+
+  const options = { billChanges: { [rentName]: newRent }, payChanges: { [toIso(nextPay)]: slowPay } };
+  const after = forecast(data, options);
+  const gapBefore = worstGap(before);
+  const gapAfter = worstGap(after);
+
+  return {
+    options, // post these back to /forecast (or /coach, /future-message) to use the new situation
+    changes: [
+      `${rentName} goes up from £${rentBill ? rentBill.amount : 0} to £${newRent}`,
+      `Pay on ${toIso(nextPay)} is £${slowPay} instead of about £${Math.round(before.income.typical)}`,
+    ],
+    gapBefore,
+    gapAfter,
+    gapGrewBy: gapAfter - gapBefore,
+    alert: gapAfter > gapBefore,
+    risk: after.risks[0] || null,
+    forecast: after,
+  };
+}
+
+// Buffer pot: keep saving after the risk is covered and build an emergency fund.
+function bufferPot(data, { perWeek, target = 500 } = {}) {
+  const f = forecast(data);
+  const risk = f.risks[0];
+  const weekly = perWeek ?? (risk ? risk.saveWeekly : 10);
+  const weeksToTarget = Math.ceil(target / weekly);
+  const today = parseDate(f.today);
+  const milestones = [];
+  for (const amount of [100, 250, target]) {
+    if (amount > target) continue;
+    const weeks = Math.ceil(amount / weekly);
+    milestones.push({ amount, weeks, date: toIso(addDays(today, weeks * 7)) });
+  }
+  return {
+    perWeek: weekly,
+    target,
+    weeksToTarget,
+    targetDate: toIso(addDays(today, weeksToTarget * 7)),
+    coversRisk: risk ? { shortfall: risk.shortfall, coveredAfterWeeks: Math.ceil(risk.shortfall / weekly) } : null,
+    milestones: [...new Map(milestones.map((m) => [m.amount, m])).values()],
+  };
+}
+
 // ---------- helpers ----------
 function worstGap(f) { return f.risks.reduce((m, r) => Math.max(m, r.shortfall), 0); }
 function parseDate(s) { const [y, m, d] = s.split("-").map(Number); return new Date(Date.UTC(y, m - 1, d)); }
@@ -172,4 +247,4 @@ function listText(items) {
   return items.length <= 1 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
 }
 
-if (typeof module !== "undefined") module.exports = { forecast, canIAfford };
+if (typeof module !== "undefined") module.exports = { forecast, canIAfford, simulateNextWeek, bufferPot };

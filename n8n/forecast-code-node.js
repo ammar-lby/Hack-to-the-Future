@@ -1,10 +1,13 @@
 // n8n Code node for /forecast (mode: Run Once for All Items)
 // Generated from forecast/forecast.js + data/adam.json. Paste the WHOLE file into the Code node.
 //
-// Request body (all optional):
-//   { "options": { "billChanges": { "Rent": 650 } } }            simulate next week
+// Request body (all optional; existing requests behave exactly as before):
+//   {}                                                               Adam's forecast
+//   { "options": { "billChanges": { "Rent": 650 }, "payChanges": { "2026-11-09": 180 } } }
 //   { "canIAfford": { "date": "2026-11-20", "amount": 150, "name": "Money home" } }
-//   { "data": { ...persona json... } }                              use another persona
+//   { "simulate": "next_week" }            rent +£50 and a slow next payday; returns the new risk + alert
+//   { "bufferPot": { "perWeek": 16, "target": 500 } }  emergency-fund plan
+//   { "data": { ...persona json... } }     use another persona
 
 const ADAM = {"persona":{"id":"adam","name":"Adam","age":27,"city":"Manchester","job":"Delivery rider (Deliveroo), paid weekly","language":"ar","homeCountry":"Libya","homeCurrency":"LYD","gbpToHome":6.9,"startBalance":0,"historyStart":"2026-08-03","today":"2026-11-07"},"knownBills":[{"name":"Rent","amount":600,"dayOfMonth":1},{"name":"Phone","amount":15,"dayOfMonth":8},{"name":"Money sent home","amount":100,"dayOfMonth":15},{"name":"Car insurance (annual)","amount":690,"date":"2027-01-04"}],"transactions":[{"date":"2026-08-03","amount":312,"type":"income","category":"Deliveroo pay"},{"date":"2026-08-03","amount":-20,"type":"spend","category":"Transport"},{"date":"2026-08-05","amount":-25.89,"type":"spend","category":"Groceries"},{"date":"2026-08-07","amount":-13.21,"type":"spend","category":"Eating out"},{"date":"2026-08-08","amount":-15,"type":"bill","category":"Phone"},{"date":"2026-08-08","amount":-22.87,"type":"spend","category":"Groceries"},{"date":"2026-08-10","amount":268,"type":"income","category":"Deliveroo pay"},{"date":"2026-08-10","amount":-20,"type":"spend","category":"Transport"},{"date":"2026-08-12","amount":-28.43,"type":"spend","category":"Groceries"},{"date":"2026-08-14","amount":-8.46,"type":"spend","category":"Eating out"},{"date":"2026-08-15","amount":-100,"type":"transfer","category":"Money sent home"},{"date":"2026-08-15","amount":-28.09,"type":"spend","category":"Groceries"},{"date":"2026-08-17","amount":405,"type":"income","category":"Deliveroo pay"},{"date":"2026-08-17","amount":-20,"type":"spend","category":"Transport"},{"date":"2026-08-19","amount":-22.45,"type":"spend","category":"Groceries"},{"date":"2026-08-21","amount":-8.56,"type":"spend","category":"Eating out"},{"date":"2026-08-22","amount":-23.09,"type":"spend","category":"Groceries"},{"date":"2026-08-24","amount":251,"type":"income","category":"Deliveroo pay"},{"date":"2026-08-24","amount":-20,"type":"spend","category":"Transport"},{"date":"2026-08-26","amount":-27.09,"type":"spend","category":"Groceries"},{"date":"2026-08-29","amount":-23.49,"type":"spend","category":"Groceries"},{"date":"2026-08-31","amount":355,"type":"income","category":"Deliveroo pay"},{"date":"2026-08-31","amount":-20,"type":"spend","category":"Transport"},{"date":"2026-09-01","amount":-600,"type":"bill","category":"Rent"},{"date":"2026-09-02","amount":-24.68,"type":"spend","category":"Groceries"},{"date":"2026-09-05","amount":-33.37,"type":"spend","category":"Groceries"},{"date":"2026-09-07","amount":240,"type":"income","category":"Deliveroo pay"},{"date":"2026-09-07","amount":-20,"type":"spend","category":"Transport"},{"date":"2026-09-08","amount":-15,"type":"bill","category":"Phone"},{"date":"2026-09-09","amount":-28.93,"type":"spend","category":"Groceries"},{"date":"2026-09-11","amount":-15.81,"type":"spend","category":"Eating out"},{"date":"2026-09-12","amount":-22.56,"type":"spend","category":"Groceries"},{"date":"2026-09-14","amount":298,"type":"income","category":"Deliveroo pay"},{"date":"2026-09-14","amount":-20,"type":"spend","category":"Transport"},{"date":"2026-09-15","amount":-100,"type":"transfer","category":"Money sent home"},{"date":"2026-09-16","amount":-32.3,"type":"spend","category":"Groceries"},{"date":"2026-09-18","amount":-9.15,"type":"spend","category":"Eating out"},{"date":"2026-09-19","amount":-23.41,"type":"spend","category":"Groceries"},{"date":"2026-09-21","amount":244,"type":"income","category":"Deliveroo pay"},{"date":"2026-09-21","amount":-20,"type":"spend","category":"Transport"},{"date":"2026-09-23","amount":-25.7,"type":"spend","category":"Groceries"},{"date":"2026-09-26","amount":-24.17,"type":"spend","category":"Groceries"},{"date":"2026-09-28","amount":420,"type":"income","category":"Deliveroo pay"},{"date":"2026-09-28","amount":-20,"type":"spend","category":"Transport"},{"date":"2026-09-30","amount":-28.98,"type":"spend","category":"Groceries"},{"date":"2026-10-01","amount":-600,"type":"bill","category":"Rent"},{"date":"2026-10-03","amount":-26.47,"type":"spend","category":"Groceries"},{"date":"2026-10-05","amount":276,"type":"income","category":"Deliveroo pay"},{"date":"2026-10-05","amount":-20,"type":"spend","category":"Transport"},{"date":"2026-10-07","amount":-28.57,"type":"spend","category":"Groceries"},{"date":"2026-10-08","amount":-15,"type":"bill","category":"Phone"},{"date":"2026-10-09","amount":-8.48,"type":"spend","category":"Eating out"},{"date":"2026-10-10","amount":-24.47,"type":"spend","category":"Groceries"},{"date":"2026-10-12","amount":230,"type":"income","category":"Deliveroo pay"},{"date":"2026-10-12","amount":-20,"type":"spend","category":"Transport"},{"date":"2026-10-14","amount":-30.16,"type":"spend","category":"Groceries"},{"date":"2026-10-15","amount":-100,"type":"transfer","category":"Money sent home"},{"date":"2026-10-16","amount":-10.51,"type":"spend","category":"Eating out"},{"date":"2026-10-17","amount":-29.03,"type":"spend","category":"Groceries"},{"date":"2026-10-19","amount":331,"type":"income","category":"Deliveroo pay"},{"date":"2026-10-19","amount":-20,"type":"spend","category":"Transport"},{"date":"2026-10-20","amount":-330,"type":"one-off","category":"E-bike repair"},{"date":"2026-10-21","amount":-27.44,"type":"spend","category":"Groceries"},{"date":"2026-10-23","amount":-14.36,"type":"spend","category":"Eating out"},{"date":"2026-10-24","amount":-30.39,"type":"spend","category":"Groceries"},{"date":"2026-10-26","amount":238,"type":"income","category":"Deliveroo pay"},{"date":"2026-10-26","amount":-20,"type":"spend","category":"Transport"},{"date":"2026-10-28","amount":-24.93,"type":"spend","category":"Groceries"},{"date":"2026-10-30","amount":-12.2,"type":"spend","category":"Eating out"},{"date":"2026-10-31","amount":-32.5,"type":"spend","category":"Groceries"},{"date":"2026-11-01","amount":-600,"type":"bill","category":"Rent"},{"date":"2026-11-02","amount":288,"type":"income","category":"Deliveroo pay"},{"date":"2026-11-02","amount":-20,"type":"spend","category":"Transport"},{"date":"2026-11-04","amount":-30.75,"type":"spend","category":"Groceries"},{"date":"2026-11-06","amount":-15.84,"type":"spend","category":"Eating out"}]};
 
@@ -21,6 +24,7 @@ function forecast(data, options = {}) {
   const buffer = options.buffer ?? 0; // balance below this counts as a risk
   const extra = options.extra || []; // [{ date, amount, name }] for "Can I afford it?"
   const billChanges = options.billChanges || {}; // { "Rent": 700 } for "simulate next week"
+  const payChanges = options.payChanges || {}; // { "2026-11-09": 180 } overrides one payday (both lines)
 
   const p = data.persona;
   const tx = data.transactions;
@@ -57,9 +61,12 @@ function forecast(data, options = {}) {
     badCase -= dailySpend;
 
     if (date.getUTCDay() === payWeekday) {
-      expected += income.typical;
-      badCase += income.low;
-      events.push({ name: "Pay", amount: income.typical, lowAmount: income.low });
+      const changed = payChanges[iso];
+      const pay = changed ?? income.typical;
+      const lowPay = changed ?? income.low;
+      expected += pay;
+      badCase += lowPay;
+      events.push({ name: "Pay", amount: pay, lowAmount: lowPay, ...(changed != null ? { changed: true } : {}) });
     }
 
     for (const bill of data.knownBills) {
@@ -115,6 +122,18 @@ function forecast(data, options = {}) {
     const weeksUntil = Math.max(1, Math.floor(daysBetween(today, parseDate(first.worst.date)) / 7));
     const perWeek = Math.ceil(shortfall / weeksUntil);
 
+    // "Why am I seeing this?": everything the warning is based on, so the user can check it.
+    const why = {
+      payRange: { low: income.low, typical: income.typical, high: income.high, weeksOfHistory: income.weeksOfHistory },
+      billsThatWeek: timeline
+        .filter((d) => parseDate(d.date) >= windowStart && parseDate(d.date) <= addDays(parseDate(first.week), 6))
+        .flatMap((d) => d.events.filter((e) => e.amount < 0).map((e) => ({ name: e.name, amount: -e.amount, date: d.date }))),
+      everydaySpendPerWeek: round(dailySpend * 7),
+      lowestExpected: worst.expected,
+      lowestBadCase: worst.badCase,
+      explanation: `In a slow week you earn about £${Math.round(income.low)}. ${billNames.length ? listText(billNames) + " land close together, " : ""}so your balance could drop ${worst.badCase < 0 ? `£${Math.round(-worst.badCase)} below zero` : `to £${Math.round(worst.badCase)}`}.`,
+    };
+
     return {
       week: first.week,
       firstDay: first.worst.date,
@@ -127,6 +146,7 @@ function forecast(data, options = {}) {
       fix: `Save £${perWeek} a week for ${weeksUntil} weeks`,
       saveWeekly: perWeek,
       weeksUntil,
+      why,
     };
   });
 
@@ -154,6 +174,64 @@ function canIAfford(data, { date, amount, name }) {
     gapAfter, // biggest shortfall with it
     makesGapBiggerBy: gapAfter - gapBefore,
     risksAfter: after.risks,
+  };
+}
+
+// "Simulate next week" (proactive alert demo): the landlord puts rent up and next week is slow.
+// Re-runs the forecast and reports what changed, so the app can show a new Future You alert.
+function simulateNextWeek(data, change = {}) {
+  const rentName = change.billName || "Rent";
+  const rentBill = data.knownBills.find((b) => b.name === rentName);
+  const newRent = change.newAmount ?? (rentBill ? rentBill.amount + 50 : 0);
+  const before = forecast(data);
+
+  // The next payday after "today", paid at the slow-week level or the amount given.
+  const today = parseDate(data.persona.today);
+  const payWeekday = mostCommon(data.transactions.filter((t) => t.type === "income").map((t) => parseDate(t.date).getUTCDay()));
+  let nextPay = addDays(today, 1);
+  while (nextPay.getUTCDay() !== payWeekday) nextPay = addDays(nextPay, 1);
+  const slowPay = change.nextPay ?? Math.round(before.income.low * 0.75);
+
+  const options = { billChanges: { [rentName]: newRent }, payChanges: { [toIso(nextPay)]: slowPay } };
+  const after = forecast(data, options);
+  const gapBefore = worstGap(before);
+  const gapAfter = worstGap(after);
+
+  return {
+    options, // post these back to /forecast (or /coach, /future-message) to use the new situation
+    changes: [
+      `${rentName} goes up from £${rentBill ? rentBill.amount : 0} to £${newRent}`,
+      `Pay on ${toIso(nextPay)} is £${slowPay} instead of about £${Math.round(before.income.typical)}`,
+    ],
+    gapBefore,
+    gapAfter,
+    gapGrewBy: gapAfter - gapBefore,
+    alert: gapAfter > gapBefore,
+    risk: after.risks[0] || null,
+    forecast: after,
+  };
+}
+
+// Buffer pot: keep saving after the risk is covered and build an emergency fund.
+function bufferPot(data, { perWeek, target = 500 } = {}) {
+  const f = forecast(data);
+  const risk = f.risks[0];
+  const weekly = perWeek ?? (risk ? risk.saveWeekly : 10);
+  const weeksToTarget = Math.ceil(target / weekly);
+  const today = parseDate(f.today);
+  const milestones = [];
+  for (const amount of [100, 250, target]) {
+    if (amount > target) continue;
+    const weeks = Math.ceil(amount / weekly);
+    milestones.push({ amount, weeks, date: toIso(addDays(today, weeks * 7)) });
+  }
+  return {
+    perWeek: weekly,
+    target,
+    weeksToTarget,
+    targetDate: toIso(addDays(today, weeksToTarget * 7)),
+    coversRisk: risk ? { shortfall: risk.shortfall, coveredAfterWeeks: Math.ceil(risk.shortfall / weekly) } : null,
+    milestones: [...new Map(milestones.map((m) => [m.amount, m])).values()],
   };
 }
 
@@ -185,7 +263,7 @@ function listText(items) {
 const body = ($input.first().json.body) || {};
 const data = body.data || ADAM;
 
-if (body.canIAfford) {
-  return [{ json: canIAfford(data, body.canIAfford) }];
-}
+if (body.canIAfford) return [{ json: canIAfford(data, body.canIAfford) }];
+if (body.simulate) return [{ json: simulateNextWeek(data, typeof body.simulate === "object" ? body.simulate : {}) }];
+if (body.bufferPot) return [{ json: bufferPot(data, body.bufferPot === true ? {} : body.bufferPot) }];
 return [{ json: forecast(data, body.options || {}) }];
