@@ -39,7 +39,6 @@ export function RiskWhy({ data }: { data: OutlookData }) {
       <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 px-4 text-lg font-bold text-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
         <Info aria-hidden className="size-5 shrink-0" />
         <span className="flex-1">{L("Why am I seeing this?", "لماذا أرى هذا؟")}</span>
-        <span className="hidden rounded-full bg-muted px-3 py-1 text-sm text-secondary sm:inline">{L("No AI · plain maths", "بلا ذكاء اصطناعي · حساب بسيط")}</span>
         <ChevronDown aria-hidden className="size-5 transition-transform group-open:rotate-180" />
       </summary>
       <div className="space-y-6 border-t border-border px-4 pb-5 pt-4">
