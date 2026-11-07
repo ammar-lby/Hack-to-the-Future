@@ -18,6 +18,8 @@ How the AI is kept honest (say this to judges): code computes the forecast and p
 
 **Voice hand-off (Ibrahim):** in `/future-message`, add the ElevenLabs step between **Final message (voice goes after this)** and **Respond live**: read `text` and `language`, write base64 MP3 to `audio`. In `/coach`, add the same step after **Guard reply**. Until then `audio` is `null` and the app shows the text.
 
+How to connect the Lovable app: see [CONNECT-FRONTEND.md](CONNECT-FRONTEND.md) (paste-ready `api.ts` + Lovable prompt).
+
 Files here:
 
 ```
