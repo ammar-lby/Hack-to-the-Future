@@ -8,13 +8,14 @@ import { useLanguage } from "@/lib/i18n";
 import { loadProfile } from "@/lib/profile";
 import { buildOutlook, type OutlookData } from "@/lib/outlook-data";
 import { hasRiskAction, prepareFutureMessage, saveCoachRisk, saveRiskAction, type RiskAction } from "@/lib/future-message";
+import { cachedFutureMessage } from "@/lib/cached-future-message";
 import { pauseAudio, playAudio, stopSpeaking, useSpeakState } from "@/lib/speak";
 
 const AUDIO_ID = "future-message";
 export function FutureMessage() {
   const { t, lang } = useLanguage();
   const [data, setData] = useState<OutlookData | null>(null);
-  const [message, setMessage] = useState<{ text: string; audio: string } | null>(null);
+  const [message, setMessage] = useState<{ text: string; src: string } | null>(null);
   const [status, setStatus] = useState<"preparing" | "ready" | "fallback">("preparing");
   const [attempt, setAttempt] = useState(0);
   const [saved, setSaved] = useState({ setAside: false, insuranceReminder: false });
@@ -30,8 +31,12 @@ export function FutureMessage() {
     setStatus("preparing"); setMessage(null); setError(null);
     try { setSaved({ setAside: hasRiskAction(risk, "setAside"), insuranceReminder: hasRiskAction(risk, "insuranceReminder") }); } catch { /* Storage may be blocked. */ }
     prepareFutureMessage(risk, lang, data.persona, controller.signal).then(result => {
-      if (!controller.signal.aborted) { setMessage(result); setStatus("ready"); }
-    }).catch(() => { if (!disposed) setStatus("fallback"); }).finally(() => window.clearTimeout(timeout));
+      if (!controller.signal.aborted) { setMessage({ text: result.text, src: "data:audio/mpeg;base64," + result.audio }); setStatus("ready"); }
+    }).catch(() => {
+      if (disposed) return;
+      const cached = cachedFutureMessage(lang, data.persona.name);
+      if (cached) { setMessage(cached); setStatus("ready"); } else setStatus("fallback");
+    }).finally(() => window.clearTimeout(timeout));
     return () => { disposed = true; controller.abort(); window.clearTimeout(timeout); stopSpeaking(); };
   }, [data, risk, lang, attempt]);
   if (!data || !risk) return null;
@@ -45,7 +50,7 @@ export function FutureMessage() {
   const play = async () => {
     if (playing) { pauseAudio(AUDIO_ID); return; }
     setError(null);
-    try { await playAudio(message ? "data:audio/mpeg;base64," + message.audio : placeholderAudio, AUDIO_ID); } catch { setError("futureAudioError"); }
+    try { await playAudio(message ? message.src : placeholderAudio, AUDIO_ID); } catch { setError("futureAudioError"); }
   };
   return <section aria-labelledby="future-message-title" className="rounded-2xl border border-primary/30 bg-card p-4 shadow-sm sm:p-5">
     <h2 id="future-message-title" className="mb-3 text-xl font-bold text-secondary">{t("futureTitle")}</h2>
@@ -55,7 +60,7 @@ export function FutureMessage() {
     </div>
     {status === "preparing" ? <p role="status" className="mt-4 text-lg">{t("futurePreparing")}</p> : <>
       {status === "fallback" && <div className="mt-4 space-y-2"><p role="status" className="text-lg text-muted-foreground">{t("futureError")}</p><Button variant="outline" onClick={() => setAttempt(value => value + 1)} className="min-h-12 text-lg"><RefreshCw aria-hidden />{t("retry")}</Button><p className="text-base text-muted-foreground">{t("futurePlaceholder")}</p></div>}
-      <p className="mt-4 text-lg leading-relaxed">{message ? message.text : fallbackParts.map((part, i) => <Fragment key={i}>{part === "{week}" ? date : part === "{reason}" ? reason : part === "{shortfall}" ? <Money amount={risk.shortfall} /> : part === "{fix}" ? <>{t("outlookSave")} <Money amount={risk.saveWeekly} /> {t("outlookWeeklyFor")} {risk.weeksUntil} {t("outlookWeeks")}</> : part}</Fragment>)}</p>
+      <p dir="auto" className="mt-4 text-lg leading-relaxed">{message ? message.text : fallbackParts.map((part, i) => <Fragment key={i}>{part === "{week}" ? date : part === "{reason}" ? reason : part === "{shortfall}" ? <Money amount={risk.shortfall} /> : part === "{fix}" ? <>{t("outlookSave")} <Money amount={risk.saveWeekly} /> {t("outlookWeeklyFor")} {risk.weeksUntil} {t("outlookWeeks")}</> : part}</Fragment>)}</p>
     </>}
     {error && <p role="alert" className="mt-3 text-lg text-destructive">{t(error)}</p>}
     <div className="mt-4 flex flex-col gap-2">

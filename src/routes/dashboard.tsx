@@ -67,7 +67,7 @@ function DashboardBody({ data }: { data: DashboardData }) {
   const fill = (k: Parameters<typeof t>[0], v: Record<string, string>) => Object.entries(v).reduce((a, [x, y]) => a.replace(`{${x}}`, y), t(k));
   return <>
     <h1 className="break-words text-3xl font-bold text-secondary">{t("greeting")}, <bdi>{data.name}</bdi></h1>
-    <section className="rounded-3xl bg-secondary p-6 text-secondary-foreground shadow-sm">
+    <section className="brand-hero rounded-3xl p-6 text-secondary-foreground shadow-lg">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3"><h2 className="text-lg font-bold opacity-90">{t("currentBalance")}</h2><SpeakButton id="balance" label={t("currentBalance")} text={fill("sayBalance", { amount: say(data.balance) })} inverted /></div>
       <p className="mt-1 text-4xl font-bold"><Money amount={data.balance} /></p>
     </section>
