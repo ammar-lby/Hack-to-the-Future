@@ -26,7 +26,7 @@ function countryName(currency: Currency, lang: Lang) {
 }
 // The 4 most likely home currencies for each app language; everything else sits under "More".
 const SUGGESTED: Record<Lang, Currency[]> = {
-  en: ["NGN", "INR", "PHP", "PLN"], ar: ["LYD", "EGP", "SAR", "AED"], hi: ["INR"], bn: ["BDT"], ur: ["PKR"],
+  en: ["GBP", "NGN", "INR", "PHP"], ar: ["LYD", "EGP", "SAR", "AED"], hi: ["INR"], bn: ["BDT"], ur: ["PKR"],
 };
 
 function CurrencySelection() {
@@ -35,7 +35,7 @@ function CurrencySelection() {
   const [failed, setFailed] = useState(false);
   const [more, setMore] = useState(false);
   const top = SUGGESTED[lang];
-  const rest = currencies.filter(c => c !== "GBP" && !top.includes(c));
+  const rest = currencies.filter(c => !top.includes(c));
   function choose(currency: Currency) {
     try { saveCurrency(currency); navigate({ to: "/setup" }); } catch { setFailed(true); }
   }
