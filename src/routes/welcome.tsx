@@ -31,8 +31,8 @@ function Welcome() {
   return (
     <div lang="en" dir="ltr" className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-8 px-6 py-10">
       <div className="text-center">
-        <div aria-hidden className="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-primary text-4xl text-primary-foreground">
-          ✦
+        <div aria-hidden className="brand-hero mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl shadow-lg">
+          <svg viewBox="0 0 32 32" className="size-12"><path d="M7 21 L13 15 L17 18 L25 9" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /><circle cx="25" cy="9" r="2.6" fill="white" /></svg>
         </div>
         <h1 className="text-5xl font-bold text-secondary">{t("appName", "en")}</h1>
         <p className="mt-6 text-xl text-foreground">{t("tagline", "en")}</p>
