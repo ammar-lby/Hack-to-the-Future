@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useLanguage, type Lang } from "@/lib/i18n";
 import { languageOptions } from "@/i18n/translations";
@@ -20,15 +21,15 @@ export const Route = createFileRoute("/welcome")({
 function Welcome() {
   const { setLang, t } = useLanguage();
   const navigate = useNavigate();
+  const [failed, setFailed] = useState(false);
 
 
   const choose = (l: Lang) => {
-    setLang(l);
-    navigate({ to: "/currency" });
+    try { setLang(l); navigate({ to: "/currency" }); } catch { setFailed(true); }
   };
 
   return (
-    <div lang="en" dir="ltr" className="mx-auto flex min-h-screen max-w-xl flex-col justify-center gap-8 px-6 py-10">
+    <div lang="en" dir="ltr" className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-8 px-6 py-10">
       <div className="text-center">
         <div aria-hidden className="mx-auto mb-6 flex size-20 items-center justify-center rounded-3xl bg-primary text-4xl text-primary-foreground">
           ✦
@@ -38,6 +39,7 @@ function Welcome() {
       </div>
 
       <div>
+        {failed && <p role="alert" className="mb-4 text-lg text-destructive">{t("saveError", "en")}</p>}
         <h2 className="mb-5 text-center text-xl font-bold">
           {t("chooseLanguage", "en")}
         </h2>

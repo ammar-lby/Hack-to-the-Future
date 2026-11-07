@@ -9,26 +9,26 @@ import { Slider } from "@/components/ui/slider";
 import { useLanguage, dirFor, type StringKey } from "@/lib/i18n";
 import { loadProfile } from "@/lib/profile";
 import { buildOutlook, riskWeeks, weekOf, type OutlookData } from "@/lib/outlook-data";
-import { useDemoRevision } from "@/lib/simulate";
 
 const eventKeys: Record<string, StringKey> = { Pay: "outlookPay", Rent: "rent", Phone: "phone", "Money sent home": "moneyHome", "Car insurance (annual)": "outlookInsurance", "Planned spend": "outlookPlanned" };
 
 export function Outlook({ compact = false }: { compact?: boolean }) {
   const { t, lang } = useLanguage();
-  const revision = useDemoRevision();
   const [state, setState] = useState<{ data: OutlookData; demo: boolean } | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    const saved = loadProfile();
-    setState({ data: buildOutlook(saved), demo: saved?.source !== "adam" });
-  }, [revision]);
+    try { const saved = loadProfile(); setState({ data: buildOutlook(saved), demo: saved?.source !== "adam" }); setFailed(false); } catch { setFailed(true); }
+  }, [attempt]);
   const [index, setIndex] = useState(20);
   const formatDate = (iso: string) => new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
   const eventName = (name: string) => t(eventKeys[name] ?? "catBills");
   const chartDays = useMemo(() => state?.data.days.map((day, i) => ({ ...day, index: i })), [state]);
+  if (failed) return <div role="alert"><p>{t("errorBody")}</p><Button className="mt-3 min-h-12 text-lg" onClick={() => setAttempt(value => value + 1)}>{t("retry")}</Button></div>;
   if (!state || !chartDays) return <p role="status">{t("outlookLoading")}</p>;
   const { data } = state;
   const selected = data.days[index];
-  if (!selected) return null;
+  if (!selected) return <p role="status">{t("outlookEmpty")}</p>;
   const weeks = riskWeeks(data);
   const isRisk = weeks.includes(weekOf(selected.date));
   const events = data.days.flatMap((day, i) => day.events.map(event => ({ ...event, date: day.date, index: i, expected: day.expected })));
@@ -76,7 +76,7 @@ export function Outlook({ compact = false }: { compact?: boolean }) {
       </div>
       <div className="border-y border-border py-5">
         <div className="flex flex-wrap items-center justify-between gap-2"><label id="look-ahead" className="text-xl font-bold text-secondary">{t("outlookExplore")}</label><span>{(index + 1) % 7 === 0 ? t("outlookWeeksAhead").replace("{weeks}", String((index + 1) / 7)) : t("outlookDaysAhead").replace("{days}", String(index + 1))}</span></div>
-        <Slider dir={dirFor(lang)} aria-labelledby="look-ahead" aria-valuetext={formatDate(selected.date)} min={0} max={89} step={1} value={[index]} onValueChange={value => { if (value[0] !== undefined) setIndex(value[0]); }} className="my-3 min-h-12 [&_[role=slider]]:size-7 [&_[role=slider]]:border-2" />
+        <Slider dir={dirFor(lang)} aria-labelledby="look-ahead" aria-valuetext={formatDate(selected.date)} min={0} max={89} step={1} value={[index]} onValueChange={value => { if (value[0] !== undefined) setIndex(value[0]); }} className="my-3 min-h-12 [&_[role=slider]]:size-11 [&_[role=slider]]:border-2" />
         <div className="space-y-4" aria-live="polite">
           <div className="flex flex-wrap items-center gap-3"><h3 className="flex items-center gap-2 text-xl font-bold"><CalendarDays className="size-5" aria-hidden />{formatDate(selected.date)}</h3>{isRisk && <span className="flex items-center gap-1 rounded-md bg-destructive/10 px-2 py-1 text-base font-bold text-destructive"><AlertTriangle className="size-4" aria-hidden />{t("outlookRiskBadge")}</span>}</div>
           <dl className="grid grid-cols-2 gap-4"><div><dt className="text-lg text-muted-foreground">{t("outlookExpected")}</dt><dd className="text-2xl font-bold text-primary"><Money amount={selected.expected} /></dd></div><div><dt className="text-lg text-muted-foreground">{t("outlookBadWeeks")}</dt><dd className={isRisk ? "text-2xl font-bold text-destructive" : "text-2xl font-bold text-secondary"}><Money amount={selected.badCase} /></dd></div></dl>
@@ -86,12 +86,12 @@ export function Outlook({ compact = false }: { compact?: boolean }) {
       </div>
     </>}
     <div className="space-y-3 border-s-4 border-primary ps-4">
-      <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-bold text-secondary">{risk ? t("outlookNextRisk") : t("outlookTitle")}</h2><SpeakButton id={compact ? "outlook-preview" : "outlook-summary"} text={speech} label={t("outlookNextRisk")} /></div>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3"><h2 className="text-xl font-bold text-secondary">{risk ? t("outlookNextRisk") : t("outlookTitle")}</h2><SpeakButton id={compact ? "outlook-preview" : "outlook-summary"} text={speech} label={t("outlookNextRisk")} /></div>
       {risk ? <>
         <p className="text-lg leading-relaxed">{t("outlookWeekOf")} {formatDate(risk.week)}: {reasons ? `${reasons} ${t("outlookTogether")}` : t("outlookLowIncome")} <Money amount={risk.shortfall} className="font-bold" /> {t("outlookShort")}</p>
         <p className="text-lg"><span className="font-bold">{t("outlookFix")}: </span>{t("outlookSave")} <Money amount={risk.saveWeekly} className="font-bold" /> {t("outlookWeeklyFor")} {risk.weeksUntil} {t("outlookWeeks")}.</p>
       </> : <p className="flex items-start gap-2 text-lg"><CheckCircle2 className="mt-1 size-6 shrink-0 text-primary" aria-hidden />{t("outlookNoRisk")}</p>}
     </div>
-    {compact && <Button asChild variant="outline" className="min-h-14 w-full text-lg"><Link to="/outlook">{t("outlookOpen")}<ArrowUpRight aria-hidden /></Link></Button>}
+    {compact && <Button asChild variant="outline" className="min-h-14 w-full text-lg"><Link to="/outlook">{t("outlookOpen")}<ArrowUpRight aria-hidden className="rtl:-rotate-90" /></Link></Button>}
   </section>;
 }

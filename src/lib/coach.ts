@@ -18,7 +18,7 @@ export async function requestCoach(messages: ChatMessage[], language: Lang, fore
 }
 
 export function helpTextParts(text: string) {
-  return text.split(/(StepChange|Citizens Advice)/gi).map(part => ({ text: part, url: part.toLowerCase() === "stepchange" ? "https://www.stepchange.org/" : part.toLowerCase() === "citizens advice" ? "https://www.citizensadvice.org.uk/" : null }));
+  return text.split(/(StepChange|Citizens Advice|MoneyHelper)/gi).map(part => ({ text: part, url: part.toLowerCase() === "stepchange" ? "https://www.stepchange.org/" : part.toLowerCase() === "moneyhelper" ? "https://www.moneyhelper.org.uk/" : part.toLowerCase() === "citizens advice" ? "https://www.citizensadvice.org.uk/" : null }));
 }
 
 export type RecognitionInstance = {

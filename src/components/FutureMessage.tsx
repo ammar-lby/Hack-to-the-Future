@@ -9,12 +9,10 @@ import { loadProfile } from "@/lib/profile";
 import { buildOutlook, type OutlookData } from "@/lib/outlook-data";
 import { hasRiskAction, prepareFutureMessage, saveCoachRisk, saveRiskAction, type RiskAction } from "@/lib/future-message";
 import { pauseAudio, playAudio, stopSpeaking, useSpeakState } from "@/lib/speak";
-import { loadDemoState, useDemoRevision } from "@/lib/simulate";
 
 const AUDIO_ID = "future-message";
 export function FutureMessage() {
   const { t, lang } = useLanguage();
-  const revision = useDemoRevision();
   const [data, setData] = useState<OutlookData | null>(null);
   const [message, setMessage] = useState<{ text: string; audio: string } | null>(null);
   const [status, setStatus] = useState<"preparing" | "ready" | "fallback">("preparing");
@@ -23,7 +21,7 @@ export function FutureMessage() {
   const [error, setError] = useState<"futureAudioError" | "futureSaveError" | null>(null);
   const audio = useSpeakState();
   const risk = data?.risks[0];
-  useEffect(() => { setData(buildOutlook(loadProfile())); }, [revision]);
+  useEffect(() => { setData(buildOutlook(loadProfile())); }, []);
   useEffect(() => {
     if (!data || !risk) return;
     let disposed = false;
@@ -49,11 +47,10 @@ export function FutureMessage() {
     setError(null);
     try { await playAudio(message ? "data:audio/mpeg;base64," + message.audio : placeholderAudio, AUDIO_ID); } catch { setError("futureAudioError"); }
   };
-  return <section aria-labelledby="future-message-title" className="rounded-3xl border border-primary/30 bg-card p-5 shadow-sm sm:p-6">
-    {loadDemoState().changed && <p role="status" className="mb-3 border-s-4 border-accent ps-3 text-lg font-bold text-primary">{t("futureChanged")}</p>}
-    <h2 id="future-message-title" className="mb-4 text-xl font-bold text-secondary">{t("futureTitle")}</h2>
-    <div className="flex items-center gap-4">
-      <Button onClick={play} disabled={loading} aria-label={playing ? t("futurePause") : t("futurePlay")} className="size-16 shrink-0 rounded-full p-0 [&_svg]:size-7">{loading ? <Loader2 className="animate-spin motion-reduce:animate-none" aria-hidden /> : playing ? <Pause aria-hidden /> : <Play aria-hidden />}</Button>
+  return <section aria-labelledby="future-message-title" className="rounded-2xl border border-primary/30 bg-card p-4 shadow-sm sm:p-5">
+    <h2 id="future-message-title" className="mb-3 text-xl font-bold text-secondary">{t("futureTitle")}</h2>
+    <div className="flex items-center gap-3">
+      <Button onClick={play} disabled={loading} aria-label={playing ? t("futurePause") : t("futurePlay")} className="size-14 shrink-0 rounded-full p-0 [&_svg]:size-6">{loading ? <Loader2 className="animate-spin motion-reduce:animate-none" aria-hidden /> : playing ? <Pause aria-hidden /> : <Play aria-hidden />}</Button>
       <div className="min-w-0 flex-1"><p className="text-lg font-bold text-secondary">{t("futureSender")}</p><progress aria-label={t("futureProgress")} value={audio.id === AUDIO_ID ? audio.progress ?? 0 : 0} max={1} className="future-audio-progress mt-2 h-2 w-full" /></div>
     </div>
     {status === "preparing" ? <p role="status" className="mt-4 text-lg">{t("futurePreparing")}</p> : <>
@@ -61,11 +58,11 @@ export function FutureMessage() {
       <p className="mt-4 text-lg leading-relaxed">{message ? message.text : fallbackParts.map((part, i) => <Fragment key={i}>{part === "{week}" ? date : part === "{reason}" ? reason : part === "{shortfall}" ? <Money amount={risk.shortfall} /> : part === "{fix}" ? <>{t("outlookSave")} <Money amount={risk.saveWeekly} /> {t("outlookWeeklyFor")} {risk.weeksUntil} {t("outlookWeeks")}</> : part}</Fragment>)}</p>
     </>}
     {error && <p role="alert" className="mt-3 text-lg text-destructive">{t(error)}</p>}
-    <div className="mt-5 flex flex-col gap-3">
-      <Button variant="outline" onClick={() => action("setAside")} disabled={saved.setAside} className="h-auto min-h-14 whitespace-normal px-4 py-3 text-lg">{saved.setAside ? t("futurePlanSaved") : <>{t("futureSetAside")} <Money amount={risk.saveWeekly} /> {t("futureGoodWeeks")}</>}</Button>
+    <div className="mt-4 flex flex-col gap-2">
+      <Button variant="outline" onClick={() => action("setAside")} disabled={saved.setAside} className="h-auto min-h-12 whitespace-normal px-3 py-2 text-lg">{saved.setAside ? t("futurePlanSaved") : <>{t("futureSetAside")} <Money amount={risk.saveWeekly} /> {t("futureGoodWeeks")}</>}</Button>
       {saved.setAside && <p role="status" className="text-base text-muted-foreground">{t("futurePlanNote")}</p>}
-      {risk.bills.some(name => name.toLowerCase().includes("insurance")) && <><Button variant="outline" onClick={() => action("insuranceReminder")} disabled={saved.insuranceReminder} className="h-auto min-h-14 whitespace-normal px-4 py-3 text-lg">{t(saved.insuranceReminder ? "futureReminderSaved" : "futureInsurance")}</Button>{saved.insuranceReminder && <p role="status" className="text-base text-muted-foreground">{t("futureReminderNote")}</p>}</>}
-      <Button asChild className="min-h-14 text-lg"><Link to="/coach" onClick={event => { try { saveCoachRisk(risk); } catch { event.preventDefault(); setError("futureSaveError"); } }}>{t("futureTalk")}</Link></Button>
+      {risk.bills.some(name => name.toLowerCase().includes("insurance")) && <><Button variant="outline" onClick={() => action("insuranceReminder")} disabled={saved.insuranceReminder} className="h-auto min-h-12 whitespace-normal px-3 py-2 text-lg">{t(saved.insuranceReminder ? "futureReminderSaved" : "futureInsurance")}</Button>{saved.insuranceReminder && <p role="status" className="text-base text-muted-foreground">{t("futureReminderNote")}</p>}</>}
+      <Button asChild className="min-h-12 text-lg"><Link to="/coach" onClick={event => { try { saveCoachRisk(risk); } catch { event.preventDefault(); setError("futureSaveError"); } }}>{t("futureTalk")}</Link></Button>
     </div>
     <p className="mt-4 text-base text-muted-foreground">{t("futureDisclaimer")}</p>
   </section>;

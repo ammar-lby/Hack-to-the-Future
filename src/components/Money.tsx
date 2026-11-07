@@ -1,6 +1,10 @@
 import { convertFromGbp } from "@/data/exchange-rates";
 import { useLanguage } from "@/lib/i18n";
 import { saveMoneyMode, useMoneyMode, type MoneyMode } from "@/lib/money-mode";
+import { Button } from "@/components/ui/button";
+import { RadioGroup } from "@/components/ui/radio-group";
+import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const gbp = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2, minimumFractionDigits: 0 });
@@ -20,7 +24,7 @@ export function Money({ amount, className }: { amount: number; className?: strin
   return (
     <span className={cn("inline-flex flex-col align-middle leading-tight", className)}>
       {pounds}
-      <span className="text-[0.6em] font-semibold opacity-80">{converted}</span>
+      <span className="text-[0.75em] font-semibold">{converted}</span>
     </span>
   );
 }
@@ -28,6 +32,7 @@ export function Money({ amount, className }: { amount: number; className?: strin
 export function MoneyModeToggle() {
   const { t } = useLanguage();
   const { mode, home } = useMoneyMode();
+  const [failed, setFailed] = useState(false);
   if (!home) return null;
   const options: { value: MoneyMode; label: string }[] = [
     { value: "gbp", label: "£ GBP" },
@@ -36,14 +41,15 @@ export function MoneyModeToggle() {
   ];
   return (
     <div>
-      <div role="radiogroup" aria-label={t("showAmountsIn")} className="grid grid-cols-3 gap-1 rounded-2xl border border-border bg-card p-1">
+      <RadioGroup value={mode} onValueChange={value => { try { saveMoneyMode(value as MoneyMode); setFailed(false); } catch { setFailed(true); } }} aria-label={t("showAmountsIn")} className="grid grid-cols-3 gap-1 rounded-2xl border border-border bg-card p-1">
         {options.map((o) => (
-          <button key={o.value} type="button" role="radio" aria-checked={mode === o.value} onClick={() => saveMoneyMode(o.value)}
+          <RadioGroupPrimitive.Item asChild key={o.value} value={o.value}><Button variant="ghost"
             className={cn("min-h-12 rounded-xl px-2 text-lg font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring", mode === o.value ? "bg-secondary text-secondary-foreground" : "text-secondary")}>
             <bdi>{o.label}</bdi>
-          </button>
+          </Button></RadioGroupPrimitive.Item>
         ))}
-      </div>
+      </RadioGroup>
+      {failed && <p role="alert" className="mt-2 text-lg text-destructive">{t("saveError")}</p>}
       {mode !== "gbp" && <p className="mt-2 text-base text-muted-foreground">{t("approxRateNote")}</p>}
     </div>
   );

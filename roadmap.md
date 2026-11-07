@@ -4,3 +4,16 @@
 - [x] Build seven setup steps with progress, validation, and saved drafts.
 - [x] Connect the existing Adam demo and saved profile to the dashboard.
 - [x] Test full setup, demo shortcut, persistence, and Arabic layouts.
+- [x] Preserve the supplied forecast in TypeScript and configure a fixed demo date.
+- [x] Build the shared outlook chart, timeline slider, risk summary and speaker control.
+- [x] Connect the dashboard outlook preview and verify English/Arabic phone layouts and forecast tests.
+- [x] Add the risk voice-note card, webhook preparation, retry and local fallback audio.
+- [x] Save set-aside plans and insurance reminders; open coach with the risk context.
+- [x] Verify message playback, actions and Arabic layouts.
+- [ ] Verify live generated voice notes — awaiting the Future You message webhook URL; sample playback works.
+- [x] Verify live coach replies in English and Arabic.
+- [x] Build Coach bubbles, speech recognition, audio replies, retry and help links.
+- [x] Push the completed frontend to Hack-to-the-Future main.
+- [x] Add saved seven-day demo simulation, updated forecast views, Home badge and reset.
+- [x] Remove the demo simulation: controls, helper, Home badge and change banner.
+- [x] Compact the Future You card and audit English/Arabic phone layouts, accessibility and screen states.

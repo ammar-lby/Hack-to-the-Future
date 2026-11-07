@@ -7,8 +7,7 @@ export const LANG_STORAGE_KEY = "futureyou.language";
 
 export function loadLanguage(): Lang | null {
   if (typeof window === "undefined") return null;
-  const v = window.localStorage.getItem(LANG_STORAGE_KEY);
-  return languageOptions.find((option) => option.value === v)?.value ?? null;
+  try { const v = window.localStorage.getItem(LANG_STORAGE_KEY); return languageOptions.find((option) => option.value === v)?.value ?? null; } catch { return null; }
 }
 
 export function saveLanguage(lang: Lang) {

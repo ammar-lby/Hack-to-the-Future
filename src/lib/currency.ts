@@ -8,6 +8,5 @@ export function saveCurrency(currency: Currency) {
 
 export function loadCurrency(): Currency | null {
   if (typeof window === "undefined") return null;
-  const value = window.localStorage.getItem(CURRENCY_STORAGE_KEY);
-  return currencies.find((currency) => currency === value) ?? null;
+  try { const value = window.localStorage.getItem(CURRENCY_STORAGE_KEY); return currencies.find((currency) => currency === value) ?? null; } catch { return null; }
 }

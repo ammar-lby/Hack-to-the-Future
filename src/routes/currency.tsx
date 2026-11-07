@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
@@ -19,14 +20,15 @@ export const Route = createFileRoute("/currency")({
 function CurrencySelection() {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const [failed, setFailed] = useState(false);
   function choose(currency: Currency) {
-    saveCurrency(currency);
-    navigate({ to: "/setup" });
+    try { saveCurrency(currency); navigate({ to: "/setup" }); } catch { setFailed(true); }
   }
   return <>
     <AppHeader />
     <div className="mx-auto max-w-xl px-4 py-8">
       <h1 className="mb-8 text-3xl font-bold text-secondary">{t("chooseCurrency")}</h1>
+      {failed && <p role="alert" className="mb-4 text-lg text-destructive">{t("saveError")}</p>}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {currencies.map((currency) => <Button key={currency} variant="outline" dir="ltr" onClick={() => choose(currency)} className="h-auto min-h-20 rounded-2xl text-2xl font-bold focus-visible:ring-4">{currency}</Button>)}
       </div>

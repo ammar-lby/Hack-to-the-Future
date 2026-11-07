@@ -14,5 +14,5 @@ export const Route = createFileRoute("/coach")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: () => <><AppHeader /><main className="mx-auto max-w-xl px-4 pb-28 pt-6"><CoachChat /></main><BottomNav /></>,
+  component: () => <><AppHeader /><div className="mx-auto max-w-xl px-4 pb-28 pt-6"><CoachChat /></div><BottomNav /></>,
 });

@@ -7,8 +7,7 @@ const EVENT = "futureyou:moneymode";
 
 export function loadMoneyMode(): MoneyMode {
   if (typeof window === "undefined") return "gbp";
-  const value = window.localStorage.getItem(MONEY_MODE_STORAGE_KEY);
-  return value === "home" || value === "both" ? value : "gbp";
+  try { const value = window.localStorage.getItem(MONEY_MODE_STORAGE_KEY); return value === "home" || value === "both" ? value : "gbp"; } catch { return "gbp"; }
 }
 export function saveMoneyMode(mode: MoneyMode) {
   window.localStorage.setItem(MONEY_MODE_STORAGE_KEY, mode);

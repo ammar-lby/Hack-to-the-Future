@@ -38,7 +38,7 @@ export function ProfileSetup() {
   function next(event: FormEvent) {
     event.preventDefault();
     const validation = validateStep(profile, step);
-    if (validation) { setError(validation); return; }
+    if (validation) { setError(validation); window.requestAnimationFrame(() => document.getElementById("setup-error")?.focus()); return; }
     try {
       if (step === 6) saveProfile({ ...profile, firstName: profile.firstName.trim() });
       else saveDraft(profile, step + 1);
@@ -55,10 +55,11 @@ export function ProfileSetup() {
       <Input id={key} name={key} type="number" inputMode="decimal" step="0.01" min={key === "currentBalance" ? undefined : 0} required={!optional} value={profile[key]} onChange={(event) => update(key, event.target.value)} className="h-16 rounded-2xl bg-card px-5 text-xl md:text-xl focus-visible:ring-4" />
     </div>;
   }
+  if (!ready) return <p role="status" className="mx-auto max-w-xl px-4 py-8">{t("setupLoading")}</p>;
   return <div className="mx-auto max-w-xl px-4 py-8">
     <div className="mb-8">
       <p className="mb-3 text-lg font-bold text-muted-foreground">{t("step")} {Math.min(step + 1, 7)} {t("of")} 7</p>
-      <div role="progressbar" aria-label={t("setupTitle")} aria-valuemin={0} aria-valuemax={7} aria-valuenow={step} className="grid h-3 grid-cols-7 gap-1.5 overflow-hidden rounded-full">
+      <div role="progressbar" aria-label={t("setupTitle")} aria-valuemin={0} aria-valuemax={7} aria-valuenow={Math.min(step + 1, 7)} className="grid h-3 grid-cols-7 gap-1.5 overflow-hidden rounded-full">
         {titles.map((title, index) => <div key={title} className={index < step ? "bg-primary" : index === step ? "bg-accent" : "bg-border"} />)}
       </div>
     </div>
@@ -76,7 +77,7 @@ export function ProfileSetup() {
         <IncomeRanges profile={profile} onChange={(key, value) => { setError(null); setProfile((previous) => ({ ...previous, [key]: value })); }} />
         <fieldset><legend className="mb-3 text-lg font-bold">{t("incomeVariation")}</legend><div className="grid grid-cols-1 gap-3 sm:grid-cols-3">{variations.map((value) => <Button type="button" key={value} variant={profile.variation === value ? "default" : "outline"} aria-pressed={profile.variation === value} onClick={() => update("variation", value)} className="h-auto min-h-16 whitespace-normal rounded-2xl px-3 py-3 text-lg font-bold">{t(value)}</Button>)}</div></fieldset>
       </>}
-      {step === 2 && <div className="divide-y divide-border">{billKeys.map((key) => <fieldset key={key} className="pb-6 pt-4 first:pt-0"><legend className="text-xl font-bold text-secondary">{t(key)}</legend><div className="grid grid-cols-2 gap-4">
+      {step === 2 && <div className="divide-y divide-border">{billKeys.map((key) => <fieldset key={key} className="pb-6 pt-4 first:pt-0"><legend className="text-xl font-bold text-secondary">{t(key)}</legend><div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div><label htmlFor={`${key}-amount`} className="mb-2 block text-lg">{t("monthlyAmount")}</label><Input id={`${key}-amount`} type="number" inputMode="decimal" min={0} step="0.01" value={profile.bills[key].amount} onChange={(event) => { setError(null); setProfile((previous) => ({ ...previous, bills: { ...previous.bills, [key]: { ...previous.bills[key], amount: event.target.value } } })); }} className="h-16 rounded-2xl bg-card text-xl md:text-xl" /></div>
         <div><label htmlFor={`${key}-day`} className="mb-2 block text-lg">{t("dueDay")}</label><Input id={`${key}-day`} type="number" inputMode="numeric" min={1} max={31} step={1} value={profile.bills[key].day} onChange={(event) => { setError(null); setProfile((previous) => ({ ...previous, bills: { ...previous.bills, [key]: { ...previous.bills[key], day: event.target.value } } })); }} className="h-16 rounded-2xl bg-card text-xl md:text-xl" /></div>
       </div></fieldset>)}</div>}
@@ -84,8 +85,8 @@ export function ProfileSetup() {
       {step === 4 && amount("weeklyFood", "weeklyFood")}
       {step === 5 && amount("monthlyRemittance", "monthlyRemittance", true)}
       {step === 6 && amount("currentBalance", "balanceAmount")}
-      {error && <p role="alert" className="text-lg font-bold text-destructive">{t(error)}</p>}
-      <div className="flex gap-4 border-t border-border pt-6">
+      {error && <p id="setup-error" tabIndex={-1} role="alert" className="text-lg font-bold text-destructive focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring">{t(error)}</p>}
+      <div className="grid grid-cols-2 gap-4 border-t border-border pt-6">
         <Button type="button" variant="outline" onClick={() => { setError(null); if (step > 0) setStep(step - 1); else navigate({ to: "/currency" }); }} className="min-h-16 flex-1 rounded-2xl text-xl font-bold"><ArrowLeft aria-hidden className="rtl:rotate-180" />{t("back")}</Button>
         <Button type="submit" className="h-auto min-h-16 flex-1 whitespace-normal rounded-2xl text-xl font-bold">{t(step === 6 ? "finish" : "next")}<ArrowRight aria-hidden className="rtl:rotate-180" /></Button>
       </div>
@@ -114,7 +115,7 @@ function IncomeRanges({ profile, onChange }: { profile: Profile; onChange: (key:
           const value = rangeValue(range);
           const selected = profile[key] === value;
           return <Button type="button" key={range.id} variant={selected ? "default" : "outline"} aria-pressed={selected} onClick={() => onChange(key, value)} className={chip}>
-            {range.min === null ? <>{t("under")} <Money amount={range.max as number} /></> : range.max === null ? <><Money amount={range.min} /> {t("orMore")}</> : <><Money amount={range.min} />–<Money amount={range.max} /></>}
+            {range.min === null ? <>{t("under")} <Money amount={range.max as number} /></> : range.max === null ? <><Money amount={range.min} /> {t("orMore")}</> : <span dir="ltr" className="inline-flex items-center gap-1"><Money amount={range.min} />–<Money amount={range.max} /></span>}
           </Button>;
         })}
         <Button type="button" variant={profile[key] === null ? "default" : "outline"} aria-pressed={profile[key] === null} onClick={() => onChange(key, null)} className={chip}>{t("notSure")}</Button>

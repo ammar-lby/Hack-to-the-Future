@@ -62,7 +62,7 @@ export function CoachChat() {
   }
   function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (!input.trim() || busy.current || failed) return;
+    if (!input.trim() || busy.current) return;
     const next = [...messages, { role: "user" as const, content: input.trim() }];
     setMessages(next); setInput(""); void send(next);
   }
@@ -92,10 +92,11 @@ export function CoachChat() {
     <h1 className="text-3xl font-bold text-secondary">{t("coachTitle")}</h1>
     {risk && <div className="border-s-4 border-primary ps-4"><h2 className="text-xl font-bold">{t("coachContext")}</h2><p className="mt-2 text-lg">{t("outlookWeekOf")} {date(risk.week)} · {t("outlookShortfall")} <Money amount={risk.shortfall} className="font-bold" /></p><p className="mt-2 text-lg">{t("outlookSave")} <Money amount={risk.saveWeekly} /> {t("outlookWeeklyFor")} {risk.weeksUntil} {t("outlookWeeks")}</p></div>}
     {!COACH_WEBHOOK_URL && <p role="status" className="text-lg text-muted-foreground">{t("coachUnavailable")}</p>}
-    <div role="log" aria-label={t("coachChatLabel")} aria-live="polite" className="min-h-36 space-y-4">
-      {messages.map((message, i) => <article key={i} className={cn("max-w-[90%] rounded-2xl px-4 py-3", message.role === "user" ? "ms-auto bg-secondary text-secondary-foreground" : "me-auto border border-border bg-card text-card-foreground")}>
+    <div role="log" aria-label={t("coachChatLabel")} aria-relevant="additions text" className="min-h-36 space-y-4">
+      {!messages.length && !sending && <p className="text-lg text-muted-foreground">{t("coachEmpty")}</p>}
+      {messages.map((message, i) => <article key={i} className={cn("min-w-0 max-w-[90%] rounded-2xl px-4 py-3", message.role === "user" ? "ms-auto bg-secondary text-secondary-foreground" : "me-auto border border-border bg-card text-card-foreground")}>
         <p className="mb-1 text-base font-bold">{t(message.role === "user" ? "coachYou" : "futureSender")}</p>
-        <p className="whitespace-pre-wrap break-words text-lg leading-relaxed">{helpTextParts(message.content).map((part, j) => <Fragment key={j}>{part.url && message.role === "assistant" ? <a href={part.url} target="_blank" rel="noopener noreferrer" className="font-bold text-primary underline underline-offset-4">{part.text}</a> : part.text}</Fragment>)}</p>
+        <p dir="auto" className="whitespace-pre-wrap break-words text-lg leading-relaxed">{helpTextParts(message.content).map((part, j) => <Fragment key={j}>{part.url && message.role === "assistant" ? <a href={part.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 min-w-11 items-center rounded-sm font-bold text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring">{part.text}</a> : part.text}</Fragment>)}</p>
         {message.role === "assistant" && message.audio && <Button variant="outline" onClick={() => playReply(message, i)} className="mt-3 min-h-12 text-lg" disabled={audio.id === `coach-reply-${i}` && audio.status === "loading"}>{audio.id === `coach-reply-${i}` && audio.status === "playing" ? <Pause aria-hidden /> : <Play aria-hidden />}{t(audio.id === `coach-reply-${i}` && audio.status === "playing" ? "coachPause" : "coachPlay")}</Button>}
       </article>)}
       {sending && <div role="status" className="me-auto flex w-fit items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-lg"><Loader2 className="size-5 animate-spin motion-reduce:animate-none" aria-hidden />{t("coachSending")}</div>}
@@ -104,8 +105,8 @@ export function CoachChat() {
     </div>
     <form onSubmit={submit} className="space-y-3 border-t border-border pt-4">
       <label htmlFor="coach-message" className="block text-lg font-bold">{t("coachQuestion")}</label>
-      <textarea id="coach-message" value={input} onChange={event => setInput(event.target.value)} maxLength={4000} rows={2} className="w-full rounded-lg border-2 border-input bg-card p-3 text-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring" />
-      <div className="flex gap-3">{supported && <Button type="button" variant={listening ? "destructive" : "outline"} onClick={toggleMic} aria-label={t(listening ? "coachMicStop" : "coachMic")} aria-pressed={listening} disabled={sending || failed} className="size-14 shrink-0 [&_svg]:size-6">{listening ? <Square aria-hidden /> : <Mic aria-hidden />}</Button>}<Button type="submit" disabled={!input.trim() || sending || failed || listening} className="min-h-14 flex-1 text-lg"><Send aria-hidden />{t(sending ? "coachSending" : "coachSend")}</Button></div>
+      <textarea id="coach-message" value={input} onChange={event => { setInput(event.target.value); setFailed(false); }} maxLength={4000} rows={2} className="w-full rounded-lg border-2 border-input bg-card p-3 text-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring" />
+      <div className="flex gap-3">{supported && <Button type="button" variant={listening ? "destructive" : "outline"} onClick={toggleMic} aria-label={t(listening ? "coachMicStop" : "coachMic")} aria-pressed={listening} disabled={sending} className="size-14 shrink-0 [&_svg]:size-6">{listening ? <Square aria-hidden /> : <Mic aria-hidden />}</Button>}<Button type="submit" disabled={!input.trim() || sending || listening} className="min-h-14 flex-1 text-lg"><Send aria-hidden className="rtl:rotate-180" />{t(sending ? "coachSending" : "coachSend")}</Button></div>
       {listening && <p role="status" className="text-lg text-primary">{t("coachListening")}</p>}
       {supported === false && <p className="text-base text-muted-foreground">{t("coachMicUnsupported")}</p>}
       {micError && <p role="alert" className="text-lg text-destructive">{t("coachMicError")}</p>}

@@ -1,6 +1,6 @@
 import adam from "@/data/adam.json";
+import { DEMO_TODAY } from "@/config";
 import { forecast, type ForecastInput } from "@/lib/forecast";
-import { simulatedForecast } from "@/lib/simulate";
 import type { SavedProfile } from "@/lib/profile";
 
 export type OutlookData = ReturnType<typeof forecast>;
@@ -8,7 +8,7 @@ export type OutlookData = ReturnType<typeof forecast>;
 /** Never fabricate transaction history. Personal profiles without history show a labelled Adam preview. */
 export function buildOutlook(saved: SavedProfile | null) {
   const source: ForecastInput = saved?.source === "adam" ? saved.data : adam;
-  return simulatedForecast(source);
+  return forecast({ ...source, persona: { ...source.persona, today: DEMO_TODAY } });
 }
 
 export function weekOf(iso: string) {

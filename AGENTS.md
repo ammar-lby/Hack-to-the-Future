@@ -41,4 +41,4 @@ use the editor.
 - Risk actions persist as local plans/reminders, never money transfers or notifications; coach receives the saved risk context and only sends chat when its webhook is configured.
 - Coach sends the complete role/content conversation with unchanged forecast output; risk context is a translated initial user turn, and retry resends the pending turn without duplicates.
 - Browser recognition is detected after hydration and stopped on language changes, send and unmount; reply playback uses the shared audio controller.
-- Demo simulation persists input overrides separately from persona history and notifies all forecast consumers; projected dashboard totals use engine events, never a second balance calculation.
+- Keep the sole main landmark in the root shell and use logical layout spacing; slider names and values belong on its Radix thumb so screen readers announce them correctly.
