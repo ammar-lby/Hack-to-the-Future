@@ -10,4 +10,4 @@ export const DEMO_TODAY = "2026-11-15";
 
 // Production n8n webhook URLs. No credentials belong in this file.
 export const FUTURE_MESSAGE_WEBHOOK_URL = "";
-export const COACH_WEBHOOK_URL = "";
+export const COACH_WEBHOOK_URL = "https://futureyou.app.n8n.cloud/webhook/coach";
