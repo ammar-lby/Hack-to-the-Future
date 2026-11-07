@@ -2,12 +2,43 @@ import { useSyncExternalStore } from "react";
 import { TTS_WEBHOOK_URL } from "@/config";
 import type { Lang } from "@/i18n/translations";
 
-export type SpeakState = { id: string | null; status: "idle" | "loading" | "playing" };
+export type SpeakState = { id: string | null; status: "idle" | "loading" | "playing" | "paused"; progress?: number };
 let state: SpeakState = { id: null, status: "idle" };
 const listeners = new Set<() => void>();
 const set = (s: SpeakState) => { state = s; listeners.forEach((l) => l()); };
 let audio: HTMLAudioElement | null = null;
 let token = 0;
+
+/** Shared player for received MP3s and bundled audio; invoke only from a click. */
+export async function playAudio(source: string, id: string) {
+  if (audio && state.id === id && state.status === "paused") {
+    await audio.play();
+    set({ ...state, status: "playing" });
+    return;
+  }
+  stopSpeaking();
+  const my = token;
+  audio = new Audio(source);
+  set({ id, status: "loading", progress: 0 });
+  audio.ontimeupdate = () => {
+    if (my === token && audio) set({ ...state, progress: Number.isFinite(audio.duration) && audio.duration > 0 ? audio.currentTime / audio.duration : 0 });
+  };
+  audio.onended = () => { if (my === token) set({ id: null, status: "idle" }); };
+  audio.onerror = () => { if (my === token) stopSpeaking(); };
+  try {
+    await audio.play();
+    if (my === token) set({ ...state, id, status: "playing" });
+  } catch (error) {
+    if (my === token) stopSpeaking();
+    throw error;
+  }
+}
+
+export function pauseAudio(id: string) {
+  if (state.id !== id || !audio) return;
+  audio.pause();
+  set({ ...state, status: "paused" });
+}
 
 const voiceLang: Record<Lang, string> = { en: "en-GB", ar: "ar", hi: "hi-IN", bn: "bn-BD", ur: "ur-PK" };
 

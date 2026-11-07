@@ -163,3 +163,8 @@
   :lang(ar) { font-family: "Noto Sans Arabic", var(--font-sans); }
   [lang="ur"]:not(html) { font-family: "Noto Nastaliq Urdu", var(--font-sans); line-height: 2; }
 }
+
+.future-audio-progress { appearance: none; border: none; border-radius: var(--radius); background: var(--muted); color: var(--primary); }
+.future-audio-progress::-webkit-progress-bar { background: var(--muted); border-radius: var(--radius); }
+.future-audio-progress::-webkit-progress-value { background: var(--primary); border-radius: var(--radius); }
+.future-audio-progress::-moz-progress-bar { background: var(--primary); border-radius: var(--radius); }

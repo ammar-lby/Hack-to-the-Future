@@ -1,3 +1,14 @@
+export type ForecastInput = {
+  persona: { name: string; language: string; homeCurrency: string; gbpToHome: number; startBalance: number; historyStart: string; today: string };
+  transactions: { date: string; amount: number; type: string }[];
+  knownBills: { name: string; amount: number; date?: string; dayOfMonth?: number }[];
+};
+export type ForecastEvent = { name: string; amount: number; lowAmount?: number };
+export type ForecastDay = { date: string; expected: number; badCase: number; events: ForecastEvent[] };
+export type ForecastRisk = { week: string; firstDay: string; lowestDay: string; shortfall: number; expectedBalance: number; badCaseBalance: number; bills: string[]; reason: string; fix: string; saveWeekly: number; weeksUntil: number };
+type ForecastOptions = { days?: number; buffer?: number; extra?: { date: string; amount: number; name?: string | undefined }[]; billChanges?: Record<string, number> };
+type RiskWeek = { week: string; worst: ForecastDay };
+
 // Future You: 90-day "financial time travel" forecast.
 // Plain JavaScript with no dependencies and no AI. Works in three places unchanged:
 //   - the frontend (import { forecast } from "./forecast")
@@ -6,7 +17,7 @@
 //
 // The AI never calculates anything. It only explains the numbers this returns.
 
-function forecast(data, options = {}) {
+export function forecast(data: ForecastInput, options: ForecastOptions = {}) {
   const days = options.days || 90;
   const buffer = options.buffer ?? 0; // balance below this counts as a risk
   const extra = options.extra || []; // [{ date, amount, name }] for "Can I afford it?"
@@ -37,11 +48,11 @@ function forecast(data, options = {}) {
   // 4. Walk forward day by day, twice: typical weeks and bad weeks.
   let expected = currentBalance;
   let badCase = currentBalance;
-  const timeline = [];
+  const timeline: ForecastDay[] = [];
   for (let i = 1; i <= days; i++) {
     const date = addDays(today, i);
     const iso = toIso(date);
-    const events = [];
+    const events: ForecastEvent[] = [];
 
     expected -= dailySpend;
     badCase -= dailySpend;
@@ -81,15 +92,15 @@ function forecast(data, options = {}) {
     .map(([week, list]) => ({ week, worst: list.reduce((a, b) => (b.badCase < a.badCase ? b : a)) }))
     .filter((w) => w.worst.badCase < buffer);
 
-  const periods = [];
+  const periods: { weeks: RiskWeek[] }[] = [];
   for (const w of riskWeeks) {
     const last = periods.at(-1);
-    if (last && daysBetween(parseDate(last.weeks.at(-1).week), parseDate(w.week)) <= 28) last.weeks.push(w);
+    if (last && daysBetween(parseDate((last.weeks.at(-1) as RiskWeek).week), parseDate(w.week)) <= 28) last.weeks.push(w);
     else periods.push({ weeks: [w] });
   }
 
   const risks = periods.map(({ weeks }) => {
-    const first = weeks[0];
+    const first = weeks[0] as RiskWeek;
     const worst = weeks.reduce((a, b) => (b.worst.badCase < a.worst.badCase ? b : a)).worst;
     const shortfall = Math.ceil(buffer - worst.badCase);
 
@@ -133,7 +144,7 @@ function forecast(data, options = {}) {
 }
 
 // "Can I afford it?": re-run the forecast with one extra spend and compare.
-function canIAfford(data, { date, amount, name }) {
+export function canIAfford(data: ForecastInput, { date, amount, name }: { date: string; amount: number; name?: string }) {
   const before = forecast(data);
   const after = forecast(data, { extra: [{ date, amount, name }] });
   const gapBefore = worstGap(before);
@@ -148,28 +159,27 @@ function canIAfford(data, { date, amount, name }) {
 }
 
 // ---------- helpers ----------
-function worstGap(f) { return f.risks.reduce((m, r) => Math.max(m, r.shortfall), 0); }
-function parseDate(s) { const [y, m, d] = s.split("-").map(Number); return new Date(Date.UTC(y, m - 1, d)); }
-function toIso(d) { return d.toISOString().slice(0, 10); }
-function addDays(d, n) { const x = new Date(d); x.setUTCDate(x.getUTCDate() + n); return x; }
-function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
-function startOfWeek(d) { const day = (d.getUTCDay() + 6) % 7; return addDays(d, -day); } // Monday
-function round(n) { return Math.round(n * 100) / 100; }
-function percentile(sorted, q) {
+function worstGap(f: ReturnType<typeof forecast>) { return f.risks.reduce((m, r) => Math.max(m, r.shortfall), 0); }
+function parseDate(s: string) { const [y, m, d] = s.split("-").map(Number) as [number, number, number]; return new Date(Date.UTC(y, m - 1, d)); }
+function toIso(d: Date) { return d.toISOString().slice(0, 10); }
+function addDays(d: Date, n: number) { const x = new Date(d); x.setUTCDate(x.getUTCDate() + n); return x; }
+function daysBetween(a: Date, b: Date) { return Math.round((b.getTime() - a.getTime()) / 86400000); }
+function startOfWeek(d: Date) { const day = (d.getUTCDay() + 6) % 7; return addDays(d, -day); } // Monday
+function round(n: number) { return Math.round(n * 100) / 100; }
+function percentile(sorted: number[], q: number) {
   if (!sorted.length) return 0;
   const pos = (sorted.length - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos);
-  return sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
+  return (sorted[lo] as number) + ((sorted[hi] as number) - (sorted[lo] as number)) * (pos - lo);
 }
-function mostCommon(arr) {
-  const counts = {}; let best = arr[0];
-  for (const v of arr) { counts[v] = (counts[v] || 0) + 1; if (counts[v] > counts[best]) best = v; }
+function mostCommon(arr: number[]) {
+  const counts: Record<number, number> = {}; let best = arr[0];
+  for (const v of arr) { counts[v] = (counts[v] || 0) + 1; if ((counts[v] as number) > (counts[best as number] as number)) best = v; }
   return best;
 }
-function groupBy(arr, keyFn) {
-  return arr.reduce((acc, x) => { const k = keyFn(x); (acc[k] = acc[k] || []).push(x); return acc; }, {});
+function groupBy<T>(arr: T[], keyFn: (x: T) => string) {
+  return arr.reduce((acc, x) => { const k = keyFn(x); (acc[k] = acc[k] || []).push(x); return acc; }, {} as Record<string, T[]>);
 }
-function listText(items) {
+function listText(items: string[]) {
   return items.length <= 1 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
 }
 
-export { forecast, canIAfford };

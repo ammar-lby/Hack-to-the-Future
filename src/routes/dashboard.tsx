@@ -6,6 +6,10 @@ import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Money, MoneyModeToggle } from "@/components/Money";
 import { SpeakButton } from "@/components/SpeakButton";
+import { Outlook } from "@/components/Outlook";
+import { FutureMessage } from "@/components/FutureMessage";
+import { DemoControls } from "@/components/DemoControls";
+import { loadDemoState, useDemoRevision } from "@/lib/simulate";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
 import { loadProfile } from "@/lib/profile";
@@ -35,15 +39,16 @@ const categoryStyle: Record<CategoryKey, { icon: LucideIcon; color: string }> = 
 
 function Dashboard() {
   const { t } = useLanguage();
+  const revision = useDemoRevision();
   const [data, setData] = useState<DashboardData | null | undefined>(undefined);
-  useEffect(() => { const saved = loadProfile(); setData(saved ? buildDashboard(saved) : null); }, []);
+  useEffect(() => { const saved = loadProfile(); setData(saved ? buildDashboard(saved) : null); }, [revision]);
   return (
     <>
       <AppHeader />
       <main className="mx-auto max-w-xl space-y-6 px-4 pb-28 pt-6">
-        {/* Reserved slot: "Message from Future You" card goes here. */}
-        <div id="future-you-message" />
+        <div id="future-you-message"><FutureMessage /></div>
         <MoneyModeToggle />
+        <DemoControls />
         {data === null && <section className="rounded-3xl border border-border bg-card p-6">
           <h1 className="text-3xl font-bold text-secondary">{t("dashboardTitle")}</h1>
           <p className="mt-3 text-lg">{t("noProfile")}</p>
@@ -77,7 +82,7 @@ function DashboardBody({ data }: { data: DashboardData }) {
         <p className="mt-1 text-3xl font-bold text-secondary"><Money amount={data.spending} /></p>
       </section>
     </div>
-    {data.estimated && <p className="text-base text-muted-foreground">{t("estimateNotice")}</p>}
+    {data.estimated && <p className="text-base text-muted-foreground">{t(loadDemoState().weeks > 0 ? "demoProjectedTotals" : "estimateNotice")}</p>}
 
     <section aria-labelledby="split-heading" className="space-y-4">
       <h2 id="split-heading" className="text-2xl font-bold text-secondary">{t("spendingSplit")}</h2>
@@ -119,10 +124,7 @@ function DashboardBody({ data }: { data: DashboardData }) {
       </ul>
     </section>
 
-    <section className="rounded-3xl border border-dashed border-border bg-card p-6">
-      <h2 className="text-2xl font-bold text-secondary">{t("outlookTitle")}</h2>
-      <p className="mt-2 text-lg text-muted-foreground">{t("outlookSoon")}</p>
-    </section>
+    <Outlook compact />
     <section className="rounded-3xl border border-dashed border-border bg-card p-6">
       <h2 className="text-2xl font-bold text-secondary">{t("coachTitle")}</h2>
       <p className="mt-2 text-lg text-muted-foreground">{t("coachSoon")}</p>

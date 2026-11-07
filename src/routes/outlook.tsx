@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PlaceholderPage } from "@/components/PlaceholderPage";
+import { AppHeader } from "@/components/AppHeader";
+import { BottomNav } from "@/components/BottomNav";
+import { MoneyModeToggle } from "@/components/Money";
+import { Outlook } from "@/components/Outlook";
 
 export const Route = createFileRoute("/outlook")({
   head: () => ({
@@ -12,5 +15,5 @@ export const Route = createFileRoute("/outlook")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: () => <PlaceholderPage title="outlookTitle" body="outlookSoon" />,
+  component: () => <><AppHeader /><main className="mx-auto max-w-3xl space-y-6 px-4 pb-28 pt-6"><MoneyModeToggle /><Outlook /></main><BottomNav /></>,
 });

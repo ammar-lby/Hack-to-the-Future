@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { PlaceholderPage } from "@/components/PlaceholderPage";
+import { AppHeader } from "@/components/AppHeader";
+import { BottomNav } from "@/components/BottomNav";
+import { CoachChat } from "@/components/CoachChat";
 
 export const Route = createFileRoute("/coach")({
   head: () => ({
@@ -12,5 +14,5 @@ export const Route = createFileRoute("/coach")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: () => <PlaceholderPage title="coachTitle" body="coachSoon" />,
+  component: () => <><AppHeader /><main className="mx-auto max-w-xl px-4 pb-28 pt-6"><CoachChat /></main><BottomNav /></>,
 });
