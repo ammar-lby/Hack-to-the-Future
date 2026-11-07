@@ -44,8 +44,10 @@ function Dashboard() {
   return (
     <>
       <AppHeader />
-      <div className="mx-auto max-w-xl space-y-6 px-4 pb-28 pt-6">
-        <div id="future-you-message"><FutureMessage /></div>
+      <div className="lg:ps-60">
+      <div className="mx-auto flex max-w-xl flex-col gap-6 px-4 pb-28 pt-6 lg:grid lg:max-w-6xl lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start lg:gap-8 lg:px-8 lg:pb-12 lg:pt-10">
+        <aside id="future-you-message" className="lg:col-start-2 lg:row-start-1"><FutureMessage /></aside>
+        <div className="min-w-0 space-y-6 lg:col-start-1 lg:row-start-1">
         <MoneyModeToggle />
         {failed ? <div role="alert"><p>{t("errorBody")}</p><Button className="mt-3 min-h-12 text-lg" onClick={() => setAttempt(value => value + 1)}>{t("retry")}</Button></div> : data === undefined && <p role="status">{t("dashboardLoading")}</p>}
         {data === null && <section className="rounded-3xl border border-border bg-card p-6">
@@ -54,6 +56,8 @@ function Dashboard() {
           <Button asChild className="mt-6 min-h-14 rounded-2xl text-lg font-bold"><Link to="/setup">{t("startSetup")}</Link></Button>
         </section>}
         {data && <DashboardBody data={data} />}
+        </div>
+      </div>
       </div>
       <BottomNav />
     </>
@@ -125,9 +129,9 @@ function DashboardBody({ data }: { data: DashboardData }) {
     </section>
 
     <Outlook compact />
-    <section className="rounded-3xl border border-dashed border-border bg-card p-6">
-      <h2 className="text-2xl font-bold text-secondary">{t("coachTitle")}</h2>
-      <p className="mt-2 text-lg text-muted-foreground">{t("coachSoon")}</p>
+    <section className="brand-hero flex flex-col gap-4 rounded-3xl p-6 text-secondary-foreground shadow-lg sm:flex-row sm:items-center sm:justify-between">
+      <div><h2 className="text-2xl font-bold">{t("coachTitle")}</h2><p className="mt-1 text-lg opacity-90">{t("coachEmpty")}</p></div>
+      <Button asChild variant="secondary" className="min-h-12 shrink-0 rounded-full bg-white px-6 text-lg font-bold text-secondary hover:bg-white/90"><Link to="/coach">{t("futureTalk")}</Link></Button>
     </section>
   </>;
 }

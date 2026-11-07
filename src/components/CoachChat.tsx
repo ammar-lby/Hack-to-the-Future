@@ -12,6 +12,11 @@ import { canRecord, startRecording, transcribe, type Recorder } from "@/lib/tran
 import { pauseAudio, playAudio, stopSpeaking, useSpeakState } from "@/lib/speak";
 import { cn } from "@/lib/utils";
 
+const SUGGESTIONS: Partial<Record<string, string[]>> = {
+  en: ["Why will January be hard?", "Can I send £150 home this month?", "What if I pay my car insurance monthly?"],
+  ar: ["لماذا سيكون شهر يناير صعبًا؟", "هل أستطيع إرسال ١٥٠ جنيهًا لأهلي هذا الشهر؟", "ماذا لو دفعت تأمين السيارة شهريًا؟"],
+};
+
 export function CoachChat() {
   const { t, lang } = useLanguage();
   const [risk, setRisk] = useState<ForecastRisk | null>(null);
@@ -113,7 +118,9 @@ export function CoachChat() {
     {risk && <div className="border-s-4 border-primary ps-4"><h2 className="text-xl font-bold">{t("coachContext")}</h2><p className="mt-2 text-lg">{t("outlookWeekOf")} {date(risk.week)} · {t("outlookShortfall")} <Money amount={risk.shortfall} className="font-bold" /></p><p className="mt-2 text-lg">{t("outlookSave")} <Money amount={risk.saveWeekly} /> {t("outlookWeeklyFor")} {risk.weeksUntil} {t("outlookWeeks")}</p></div>}
     {!COACH_WEBHOOK_URL && <p role="status" className="text-lg text-muted-foreground">{t("coachUnavailable")}</p>}
     <div role="log" aria-label={t("coachChatLabel")} aria-relevant="additions text" className="min-h-36 space-y-4">
-      {!messages.length && !sending && <p className="text-lg text-muted-foreground">{t("coachEmpty")}</p>}
+      {!messages.length && !sending && <div className="space-y-4"><p className="text-lg text-muted-foreground">{t("coachEmpty")}</p>
+        {SUGGESTIONS[lang] && <div className="flex flex-wrap gap-2">{SUGGESTIONS[lang]!.map(q => <button key={q} type="button" dir="auto" onClick={() => { const next = [{ role: "user" as const, content: q }]; setMessages(next); void send(next); }} className="min-h-11 rounded-full border border-primary/30 bg-card px-4 text-base font-bold text-primary transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring">{q}</button>)}</div>}
+      </div>}
       {messages.map((message, i) => <article key={i} className={cn("min-w-0 max-w-[90%] rounded-2xl px-4 py-3", message.role === "user" ? "ms-auto bg-secondary text-secondary-foreground" : "me-auto border border-border bg-card text-card-foreground")}>
         <p className="mb-1 text-base font-bold">{t(message.role === "user" ? "coachYou" : "futureSender")}</p>
         <p dir="auto" className="whitespace-pre-wrap break-words text-lg leading-relaxed">{helpTextParts(message.content).map((part, j) => <Fragment key={j}>{part.url && message.role === "assistant" ? <a href={part.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 min-w-11 items-center rounded-sm font-bold text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring">{part.text}</a> : part.text}</Fragment>)}</p>

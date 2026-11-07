@@ -15,5 +15,5 @@ export const Route = createFileRoute("/outlook")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: () => <><AppHeader /><div className="mx-auto max-w-3xl space-y-6 px-4 pb-28 pt-6"><MoneyModeToggle /><Outlook /></div><BottomNav /></>,
+  component: () => <><AppHeader /><div className="lg:ps-60"><div className="mx-auto max-w-3xl space-y-6 px-4 pb-28 pt-6 lg:max-w-5xl lg:px-8 lg:pb-12 lg:pt-10"><MoneyModeToggle /><Outlook /></div></div><BottomNav /></>,
 });

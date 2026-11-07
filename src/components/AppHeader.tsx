@@ -17,7 +17,7 @@ export function AppHeader() {
   const { lang, setLang, t } = useLanguage();
   return (
     <header className="brand-bar sticky top-0 z-10 text-white shadow-md">
-      <div className="mx-auto grid max-w-xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3">
+      <div className="mx-auto grid max-w-xl lg:max-w-none lg:px-6 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3">
         <Link to="/dashboard" className="flex min-h-12 min-w-0 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring">
           <LogoMark />
           <span className="min-w-0">
