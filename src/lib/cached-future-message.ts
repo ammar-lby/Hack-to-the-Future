@@ -6,8 +6,8 @@ import type { ForecastRisk } from "@/lib/forecast";
  * with ElevenLabs, served from public/audio). Text must match what the MP3 says.
  */
 const CACHED: Partial<Record<Lang, { text: string; src: string }>> = {
-  en: { text: "This is an AI-generated message, not financial advice. Hi Adam, it's you, from the future. January into early February was hard. Rent and the yearly car insurance landed together. In the slow weeks, we were up to £143 short. Two things would have helped. Saving £16 a week, starting now, for nine weeks. Or paying the car insurance monthly instead. Citizens Advice can help for free. Open the app, and let's talk it through.", src: "/audio/adam_en_future_message.mp3" },
-  ar: { text: "هذه رسالة من الذكاء الاصطناعي، وليست نصيحة مالية. مرحبًا آدم، أنا أنتَ، من المستقبل. كانت الفترة من يناير إلى أوائل فبراير صعبة. خرج الإيجار وتأمين السيارة السنوي معًا. وفي الأسابيع الهادئة، كان ينقصنا ما يصل إلى مئة وثلاثة وأربعين جنيهًا. شيئان كانا سيساعداننا: أن ندّخر ستة عشر جنيهًا كل أسبوع، من الآن ولمدة تسعة أسابيع. أو أن ندفع تأمين السيارة شهريًا بدلًا من دفعة واحدة. منظمة Citizens Advice تساعد مجانًا. افتح التطبيق، ولنتحدث معًا.", src: "/audio/adam_ar_future_message.mp3" },
+  en: { text: "Hi Adam, it's you, from the future. January into early February was hard. Rent and the yearly car insurance landed together. In the slow weeks, we were up to £143 short. Two things would have helped. Saving £16 a week, starting now, for nine weeks. Or paying the car insurance monthly instead. Citizens Advice can help for free. Open the app, and let's talk it through.", src: "/audio/adam_en_future_message.mp3" },
+  ar: { text: "مرحبًا آدم، أنا أنتَ، من المستقبل. كانت الفترة من يناير إلى أوائل فبراير صعبة. خرج الإيجار وتأمين السيارة السنوي معًا. وفي الأسابيع الهادئة، كان ينقصنا ما يصل إلى مئة وثلاثة وأربعين جنيهًا. شيئان كانا سيساعداننا: أن ندّخر ستة عشر جنيهًا كل أسبوع، من الآن ولمدة تسعة أسابيع. أو أن ندفع تأمين السيارة شهريًا بدلًا من دفعة واحدة. منظمة Citizens Advice تساعد مجانًا. افتح التطبيق، ولنتحدث معًا.", src: "/audio/adam_ar_future_message.mp3" },
 };
 
 // The numbers the cached recordings say out loud.
@@ -34,9 +34,9 @@ export function liveFutureScript(language: Lang, name: string, risk: ForecastRis
     const period = from === to ? `شهر ${from}` : `الفترة من ${from} إلى ${to}`;
     const bills = risk.bills.map(b => BILLS_AR[b] ?? b).join(" و");
     name = name.trim().toLowerCase() === "adam" ? "آدم" : name;
-    return `هذه رسالة من الذكاء الاصطناعي، وليست نصيحة مالية. مرحبًا ${name}، أنا أنتَ، من المستقبل. كانت ${period} صعبة.${bills ? ` جاء ${bills} معًا.` : ""} في الأسابيع الهادئة، كان ينقصنا ما يصل إلى ${risk.shortfall} جنيهًا. لو ادّخرنا ${risk.saveWeekly} جنيهًا كل أسبوع، من الآن ولمدة ${risk.weeksUntil} أسابيع، لكان ذلك كافيًا. منظمة Citizens Advice تساعد مجانًا.`;
+    return `مرحبًا ${name}، أنا أنتَ، من المستقبل. كانت ${period} صعبة.${bills ? ` جاء ${bills} معًا.` : ""} في الأسابيع الهادئة، كان ينقصنا ما يصل إلى ${risk.shortfall} جنيهًا. لو ادّخرنا ${risk.saveWeekly} جنيهًا كل أسبوع، من الآن ولمدة ${risk.weeksUntil} أسابيع، لكان ذلك كافيًا. منظمة Citizens Advice تساعد مجانًا.`;
   }
   const period = from === to ? from : `${from} into ${to}`;
   const bills = risk.bills.map(b => b === "Car insurance (annual)" ? "the yearly car insurance" : b.toLowerCase()).join(" and ");
-  return `This is an AI-generated message, not financial advice. Hi ${name}, it's you, from the future. ${period} was hard.${bills ? ` ${bills.charAt(0).toUpperCase()}${bills.slice(1)} landed together.` : ""} In the slow weeks, we were up to £${risk.shortfall} short. Saving £${risk.saveWeekly} a week, starting now, for ${risk.weeksUntil} weeks, would cover it. Citizens Advice can help for free.`;
+  return `Hi ${name}, it's you, from the future. ${period} was hard.${bills ? ` ${bills.charAt(0).toUpperCase()}${bills.slice(1)} landed together.` : ""} In the slow weeks, we were up to £${risk.shortfall} short. Saving £${risk.saveWeekly} a week, starting now, for ${risk.weeksUntil} weeks, would cover it. Citizens Advice can help for free.`;
 }
