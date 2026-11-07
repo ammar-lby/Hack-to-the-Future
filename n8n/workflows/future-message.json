@@ -286,8 +286,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        2464,
-        100
+        2912,
+        192
       ],
       "parameters": {
         "respondWith": "firstIncomingItem",
@@ -301,6 +301,42 @@
             ]
           }
         }
+      }
+    },
+    {
+      "name": "Voice (voice-speak)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2464,
+        192
+      ],
+      "onError": "continueRegularOutput",
+      "notes": "Calls Ibrahim's voice-speak workflow to turn the final text into audio. If it fails, the next node still returns the text without audio.",
+      "parameters": {
+        "method": "POST",
+        "url": "https://futureyou.app.n8n.cloud/webhook/voice-speak",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: $json.text, language: $json.language }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "name": "Attach audio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        192
+      ],
+      "notes": "Adds the base64 mp3 to the message as audio (audio_mime audio/mpeg). If voice failed, audio is null and audio_error is set, so the app can show text only.",
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const msg = $('Final message (voice goes after this)').first().json;\nconst v = $input.first().json || {};\nconst audio = (typeof v.audio === 'string' && v.audio.length > 100) ? v.audio : null;\nreturn [{ json: { ...msg, audio, audio_mime: audio ? 'audio/mpeg' : null, audio_error: audio ? null : 'voice_unavailable' } }];"
       }
     }
   ],
@@ -444,6 +480,28 @@
       "main": [
         [
           {
+            "node": "Voice (voice-speak)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Voice (voice-speak)": {
+      "main": [
+        [
+          {
+            "node": "Attach audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach audio": {
+      "main": [
+        [
+          {
             "node": "Respond live",
             "type": "main",
             "index": 0
@@ -456,6 +514,6 @@
     "executionOrder": "v1"
   },
   "meta": {
-    "note": "Export of the live workflow on futureyou.app.n8n.cloud. After import, re-select the Anthropic credential on each Claude node. Contains no secrets."
+    "note": "Export of the live workflow on futureyou.app.n8n.cloud. After import, re-select the credentials (Anthropic / ElevenLabs Header Auth). Contains no secrets."
   }
 }

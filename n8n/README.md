@@ -1,16 +1,18 @@
 # n8n workflows
 
-## Live now (Melanius)
+## Live now (Melanius, Ammar, Ibrahim)
 
-All three endpoints use **Adam** (`data/adam.json`) and **Ammar's forecast** (`forecast/forecast.js`). Only `/forecast` contains the forecast code; `/coach` and `/future-message` call `/forecast` over HTTP, so there is one source of truth. All take POST JSON, return JSON, and allow CORS from any origin.
+The JSON files in `workflows/` are exports of the live n8n workflows (last synced 7 Nov, 16:00), so the repo matches n8n. All five use **Adam** (`data/adam.json`) and **Ammar's forecast** (`forecast/forecast.js`). Only `/forecast` contains the forecast code; `/coach` and `/future-message` call `/forecast` over HTTP, so there is one source of truth. All take POST JSON, return JSON, and allow CORS from any origin.
 
 To find a URL yourself: open the workflow in n8n, double-click the first (Webhook) box, and copy the **Production URL** (`/webhook/...`, not `/webhook-test/...`). It only works while the workflow is published.
 
 | Endpoint | Request | Response | Tested |
 |---|---|---|---|
 | `https://futureyou.app.n8n.cloud/webhook/forecast` | `{}`, `{ options: { billChanges, payChanges } }`, `{ canIAfford: { date, amount, name } }`, `{ simulate: "next_week" }` or `{ bufferPot: true }` (last two need the updated Code node) | output of `forecast()` / `canIAfford()` / `simulateNextWeek()` / `bufferPot()`; each risk now has a `why` breakdown | £143 short in slow weeks from w/c 4 Jan; fix "Save £16 a week for 9 weeks" |
-| `https://futureyou.app.n8n.cloud/webhook/coach` | `{ messages: [{ role, content }], language, options? }` | `{ text, text_en, audio, plan, forecast_options, signposts, escalate, disclaimer }` | Arabic reply to Adam (masculine) in 4.4 s; refuses payday loans |
+| `https://futureyou.app.n8n.cloud/webhook/coach` | `{ messages: [{ role, content }], language, forecast?, options? }` | `{ text, text_en, audio, audio_mime, plan, forecast_options, signposts, escalate, disclaimer }` | Arabic reply to Adam (masculine) in 4.4 s; refuses payday loans |
 | `https://futureyou.app.n8n.cloud/webhook/future-message` | `{ language, risk?, options?, demo_mode? }` | `{ text, text_en, audio, audio_url, risk, disclosure_text, dir, cached, guarded }` | Live Arabic in 7.5 s; `demo_mode: true` returns the approved cached script instantly |
+| `https://futureyou.app.n8n.cloud/webhook/voice-speak` (Ibrahim) | `{ text, language }` | `{ audio, language }` (base64 MP3, ElevenLabs `eleven_v3`) | Arabic and English voices |
+| `https://futureyou.app.n8n.cloud/webhook/voice-transcribe` (Ibrahim) | multipart form, audio file in field `audio` | `{ transcript, detected_language, error }` (ElevenLabs `scribe_v2`) | |
 
 How the AI is kept honest (say this to judges): code computes the forecast and prices each option (`Save £16 a week…` covers the £143 gap; paying the car insurance monthly at about £62 clears it). Claude only explains those numbers. A guard node rejects any reply containing a £ figure that isn't in the forecast, and a second guard checks the Arabic translation kept every amount. Any failure falls back to the approved script in `prompts/cached-scripts.md`.
 
@@ -18,14 +20,15 @@ If the app sends its own `forecast` with a coach question (Nulara's CoachChat do
 
 `forecast_options` in a coach reply can be posted straight back to `/forecast` to redraw the chart with the suggested change.
 
-**Voice hand-off (Ibrahim):** in `/future-message`, add the ElevenLabs step between **Final message (voice goes after this)** and **Respond live**: read `text` and `language`, write base64 MP3 to `audio`. In `/coach`, add the same step after **Guard reply**. Until then `audio` is `null` and the app shows the text.
+**Voice (done, Ibrahim):** `/coach` (after **Guard reply**) and `/future-message` (after **Final message**, live path only) call `/voice-speak` and attach the base64 MP3 as `audio`. If voice fails, `audio` is `null`, `audio_error` is `"voice_unavailable"`, and the app shows the text. The demo-mode cached path has no audio; it uses the backup MP3s.
 
 How to connect the Lovable app: see [CONNECT-FRONTEND.md](CONNECT-FRONTEND.md) (paste-ready `api.ts` + Lovable prompt).
 
 Files here:
 
 ```
-workflows/   importable exports of forecast.json, coach.json, future-message.json (re-select the Anthropic credential after import)
+workflows/   exports of the live workflows: forecast, coach, future-message, voice-speak, voice-transcribe
+             (import via n8n "Import from file", then re-select the Anthropic / ElevenLabs credentials; no keys are in these files)
 prompts/     coach, script-writer and translation prompts, plus the approved cached scripts
 tools/       generate-cache.js: calls the live endpoints and saves demo MP3s + mock JSON for the frontend
 ```
