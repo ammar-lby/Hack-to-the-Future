@@ -20,7 +20,7 @@ node forecast/test.js
   - `options.billChanges`: `{ "Rent": 650 }` changes a bill (for "simulate next week")
 - `canIAfford(data, { date, amount, name })` returns `{ affordable, gapBefore, gapAfter, makesGapBiggerBy }`
 
-## Yusuf's story (data/yusuf.json)
+## Adam's story (data/adam.json)
 Delivery rider in Manchester, paid weekly (£230–£420), rent £600, sends £100 home on the 15th, had a £330 e-bike repair in October. His £690 annual car insurance is due on 4 January, the same week as rent. In bad weeks he ends up **£143 short**, and the fix is to **save £16 a week for 9 weeks**.
 
 ## To do

@@ -29,7 +29,7 @@ One shared n8n Cloud account (Melanius owns it and invites everyone). API keys a
 
 **language**: `"en"` or `"ar"`.
 
-**persona**: `{ "name": "Yusuf", "language": "ar", "homeCurrency": "LYD" }`
+**persona**: `{ "name": "Adam", "language": "ar", "homeCurrency": "LYD" }`
 
 ## Melanius: building `/future-message` and `/coach`
 

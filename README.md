@@ -27,7 +27,7 @@ GreatUniHack 2026, NatWest challenge: AI-Powered Financial Inclusion & Resilienc
 ## Structure
 
 ```
-data/yusuf.json        persona: Yusuf, delivery rider in Manchester, Arabic speaker (Ammar)
+data/adam.json        persona: Adam, delivery rider in Manchester, Arabic speaker (Ammar)
 forecast/forecast.js   90-day forecast, plain JavaScript, no AI (Ammar)
 forecast/test.js       run: node forecast/test.js
 n8n/                   exported n8n workflows + the API contracts (Melanius, Ibrahim)
@@ -38,7 +38,7 @@ voice/                 ElevenLabs notes and backup demo MP3s (Ibrahim)
 ## How it fits together
 
 ```
-Lovable app ──► forecast(yusuf.json)            → chart, risk weeks
+Lovable app ──► forecast(adam.json)            → chart, risk weeks
             ──► n8n /future-message  → Claude → ElevenLabs → { text, audio }
             ──► n8n /coach           → Claude → ElevenLabs → { text, audio }
 ```

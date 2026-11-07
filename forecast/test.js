@@ -1,6 +1,6 @@
 // Run: node forecast/test.js
 const { forecast, canIAfford } = require("./forecast");
-const data = require("../data/yusuf.json");
+const data = require("../data/adam.json");
 
 const f = forecast(data);
 console.log("Current balance: £" + f.currentBalance, `(${f.currentBalanceHome} ${f.persona.homeCurrency})`);

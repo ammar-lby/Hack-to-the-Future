@@ -13,7 +13,7 @@ Lovable repo: _add link_
 6. "Simulate next week" button (proactive alert demo)
 
 ## Data
-- Persona: `data/yusuf.json`
+- Persona: `data/adam.json`
 - Forecast: `forecast/forecast.js` (copy into Lovable as `src/lib/forecast.ts`)
 - Webhooks: see `n8n/README.md`
 - Arabic text must display right to left (`dir="rtl"`)
