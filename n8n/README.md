@@ -1,5 +1,37 @@
 # n8n workflows
 
+## Live now (Melanius)
+
+All three endpoints use **Adam** (`data/adam.json`) and **Ammar's forecast** (`forecast/forecast.js`). Only `/forecast` contains the forecast code; `/coach` and `/future-message` call `/forecast` over HTTP, so there is one source of truth. All take POST JSON, return JSON, and allow CORS from any origin.
+
+To find a URL yourself: open the workflow in n8n, double-click the first (Webhook) box, and copy the **Production URL** (`/webhook/...`, not `/webhook-test/...`). It only works while the workflow is published.
+
+| Endpoint | Request | Response | Tested |
+|---|---|---|---|
+| `https://futureyou.app.n8n.cloud/webhook/forecast` | `{}` or `{ options: { billChanges } }` or `{ canIAfford: { date, amount, name } }` | output of `forecast()` / `canIAfford()` | £143 short in slow weeks from w/c 4 Jan; fix "Save £16 a week for 9 weeks" |
+| `https://futureyou.app.n8n.cloud/webhook/coach` | `{ messages: [{ role, content }], language, options? }` | `{ text, text_en, audio, plan, forecast_options, signposts, escalate, disclaimer }` | Arabic reply to Adam (masculine) in 4.4 s; refuses payday loans |
+| `https://futureyou.app.n8n.cloud/webhook/future-message` | `{ language, risk?, options?, demo_mode? }` | `{ text, text_en, audio, audio_url, risk, disclosure_text, dir, cached, guarded }` | Live Arabic in 7.5 s; `demo_mode: true` returns the approved cached script instantly |
+
+How the AI is kept honest (say this to judges): code computes the forecast and prices each option (`Save £16 a week…` covers the £143 gap; paying the car insurance monthly at about £62 clears it). Claude only explains those numbers. A guard node rejects any reply containing a £ figure that isn't in the forecast, and a second guard checks the Arabic translation kept every amount. Any failure falls back to the approved script in `prompts/cached-scripts.md`.
+
+If the app sends its own `forecast` with a coach question (Nulara's CoachChat does), `/coach` uses those numbers instead of calling `/forecast`, so the coach always matches what the Outlook screen shows, including the demo date (15 Nov) and "simulate next week".
+
+`forecast_options` in a coach reply can be posted straight back to `/forecast` to redraw the chart with the suggested change.
+
+**Voice hand-off (Ibrahim):** in `/future-message`, add the ElevenLabs step between **Final message (voice goes after this)** and **Respond live**: read `text` and `language`, write base64 MP3 to `audio`. In `/coach`, add the same step after **Guard reply**. Until then `audio` is `null` and the app shows the text.
+
+How to connect the Lovable app: see [CONNECT-FRONTEND.md](CONNECT-FRONTEND.md) (paste-ready `api.ts` + Lovable prompt).
+
+Files here:
+
+```
+workflows/   importable exports of forecast.json, coach.json, future-message.json (re-select the Anthropic credential after import)
+prompts/     coach, script-writer and translation prompts, plus the approved cached scripts
+tools/       generate-cache.js: calls the live endpoints and saves demo MP3s + mock JSON for the frontend
+```
+
+---
+
 One shared n8n Cloud account (Melanius owns it and invites everyone). API keys are stored once as **credentials** and never go in code or chat.
 
 | Workflow | Owner | Input (POST JSON) | Output |

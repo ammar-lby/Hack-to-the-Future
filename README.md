@@ -33,6 +33,7 @@ forecast/test.js       run: node forecast/test.js
 n8n/                   exported n8n workflows + the API contracts (Melanius, Ibrahim)
 frontend/              notes for the Lovable app (Nulara)
 voice/                 ElevenLabs notes and backup demo MP3s (Ibrahim)
+docs/build-plan.md     full build plan: risks, scope, contracts, prompts, demo script, fallback
 ```
 
 ## How it fits together

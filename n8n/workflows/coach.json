@@ -1,0 +1,224 @@
+{
+  "name": "Future You - /coach",
+  "nodes": [
+    {
+      "name": "POST /coach",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "coach",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "coach",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      }
+    },
+    {
+      "name": "Forecast",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "executeOnce": true,
+      "parameters": {
+        "method": "POST",
+        "url": "https://futureyou.app.n8n.cloud/webhook/forecast",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ options: $('POST /coach').first().json.body.options || {} }) }}",
+        "options": {
+          "timeout": 20000
+        }
+      }
+    },
+    {
+      "name": "Forecast with monthly insurance",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        0
+      ],
+      "executeOnce": true,
+      "parameters": {
+        "method": "POST",
+        "url": "https://futureyou.app.n8n.cloud/webhook/forecast",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ options: Object.assign({}, $('POST /coach').first().json.body.options || {}, { billChanges: Object.assign({}, (($('POST /coach').first().json.body.options || {}).billChanges) || {}, { 'Car insurance (annual)': 62 }) }) }) }}",
+        "options": {
+          "timeout": 20000
+        }
+      }
+    },
+    {
+      "name": "Build FACTS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const body = $('POST /coach').first().json.body || {};\nconst LANGS = { en: { name: 'English', dir: 'ltr', disclosure: 'This is an AI-generated message, not financial advice.' }, ar: { name: 'Arabic', dir: 'rtl', disclosure: 'هذه رسالة من الذكاء الاصطناعي، وليست نصيحة مالية.' } };\nconst language = LANGS[body.language] ? body.language : 'en';\nconst SIGNPOSTS = { stepchange: { name: 'StepChange', url: 'https://www.stepchange.org', why: 'Free debt advice' }, citizens_advice: { name: 'Citizens Advice', url: 'https://www.citizensadvice.org.uk', why: 'Free help with bills, benefits and rent' }, moneyhelper: { name: 'MoneyHelper', url: 'https://www.moneyhelper.org.uk', why: 'Free, government-backed money guidance' } };\nconst f0 = $('Forecast').first().json;\nconst fm0 = $('Forecast with monthly insurance').first().json;\nconst sent = body.forecast;\nconst useSent = !!(sent && Array.isArray(sent.days) && Array.isArray(sent.risks) && sent.income && sent.today);\nconst f = useSent ? sent : f0;\nconst INST = 62;\nconst name = (f.persona && f.persona.name) || 'Adam';\nconst risk = (body.risk && body.risk.shortfall) ? body.risk : (f.risks[0] || null);\nconst monthOf = (d) => new Date(d + 'T00:00:00Z').toLocaleString('en-GB', { month: 'long', timeZone: 'UTC' });\nconst billAmount = (n) => { const from = new Date(Date.parse(risk.week + 'T00:00:00Z') - 3 * 864e5).toISOString().slice(0, 10); let fb = null; for (const d of f.days) for (const e of d.events) if (e.name === n && e.amount < 0) { const hit = { name: n, amount: -e.amount, date: d.date }; if (d.date >= from && d.date <= risk.firstDay) return hit; if (!fb) fb = hit; } return fb || { name: n }; };\nconst OPTIONS = {};\nif (risk) {\n  OPTIONS.save_weekly = { id: 'save_weekly', title: risk.fix, effect: (risk.saveWeekly * risk.weeksUntil >= risk.shortfall) ? 'covers the £' + risk.shortfall + ' gap' : 'makes the gap smaller', apply: null };\n  let rm = (fm0.risks || [])[0];\n  if (useSent) {\n    let insDate = null, insAmount = 0;\n    for (const d of f.days) for (const e of (d.events || [])) if (e.name === 'Car insurance (annual)' && e.amount < 0 && !insDate) { insDate = d.date; insAmount = -e.amount; }\n    if (insDate) {\n      const saving = insAmount - INST;\n      const lowest = Math.min(...f.days.map(d => d.badCase + (d.date >= insDate ? saving : 0)));\n      rm = lowest < 0 ? { shortfall: Math.ceil(-lowest) } : null;\n    } else rm = { shortfall: risk.shortfall };\n  }\n  OPTIONS.monthly_insurance = { id: 'monthly_insurance', title: 'Ask the insurer to let you pay the car insurance monthly (about £' + INST + ' a month, usually a bit dearer overall)', effect: rm ? 'the gap shrinks from £' + risk.shortfall + ' to £' + rm.shortfall : 'no short week at all', apply: { billChanges: { 'Car insurance (annual)': INST } } };\n}\nconst facts = { name, today: f.today, current_balance: Math.round(f.currentBalance), income_typical_week: Math.round(f.income.typical), income_low_week: Math.round(f.income.low),\n  risk: risk ? { week_start: risk.week, month: monthOf(risk.firstDay), first_short_day: risk.firstDay, shortfall: risk.shortfall, reason: risk.reason, bills: (risk.bills || []).map(billAmount), fix: risk.fix } : null,\n  OPTIONS: Object.fromEntries(Object.entries(OPTIONS).map(([k, o]) => [k, { id: o.id, title: o.title, effect: o.effect }])), signposts: SIGNPOSTS };\nconst msgs = Array.isArray(body.messages) ? body.messages : [];\nconst lastUser = [...msgs].reverse().find(m => m.role === 'user');\nconst userText = (lastUser && (lastUser.content || lastUser.text)) || (body.input && body.input.text) || body.text || '';\nconst history = msgs.slice(0, lastUser ? msgs.lastIndexOf(lastUser) : msgs.length).slice(-6).map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: String(m.content || m.text || '') })).filter(m => m.content);\nwhile (history.length && history[0].role !== 'user') history.shift();\nconst fill = (s) => s.split('{language}').join(language).split('{name}').join(name).split('{today}').join(f.today).split('{month}').join(facts.risk ? facts.risk.month : 'the coming weeks');\nconst messages = [...history, { role: 'user', content: 'FACTS: ' + JSON.stringify(facts) + '\\n\\nUSER SAID: ' + (userText || '(nothing)') }];\nconst fixed = []; for (const m of messages) { if (fixed.length && fixed[fixed.length - 1].role === m.role) fixed[fixed.length - 1].content += '\\n' + m.content; else fixed.push({ ...m }); }\nreturn [{ json: { facts, options_full: OPTIONS, user_transcript: userText, language, forecast_source: useSent ? 'app' : 'backend',\n  anthropic_body: { model: 'claude-haiku-5-5', max_tokens: 1024, thinking: { type: 'disabled' }, system: fill(\"You are \\\"Future You\\\", a friendly AI money coach inside a budgeting app for people on irregular incomes and people new to the UK. You are an AI and say so if asked. You are NOT a regulated financial adviser.\\n\\nRespond in the language with code {language}. Use Modern Standard Arabic for \\\"ar\\\". The user is {name}; in Arabic use masculine forms for Adam. Also return an English version for subtitles.\\n\\nDATES: Today is {today}. The short period starts in {month} (FACTS.risk). Say \\\"in {month}\\\", never \\\"next week\\\".\\n\\nINPUT: FACTS (forecast, risk, OPTIONS with pre-computed effects, signposts) and the conversation so far. The user may have spoken; their words were transcribed and may contain errors.\\n\\nRULES\\n1. Numbers: use ONLY figures in FACTS. Never do maths. If the user asks about an option not in OPTIONS, say you can't calculate that yet and suggest talking to a free adviser.\\n2. Reply in at most 3 short sentences (max 60 words), spoken style, reading age 9. One idea per sentence. Ask at most one question.\\n3. Suggest only actions from OPTIONS. Explain why each helps in one sentence.\\n4. Always include at least one signpost id from FACTS.signposts in \\\"signpost_ids\\\".\\n5. Never recommend borrowing, credit cards, payday loans, Buy Now Pay Later, investments or specific providers. Never say \\\"guaranteed\\\" or \\\"you will\\\". Use \\\"the forecast suggests\\\".\\n6. Non-judgemental: never comment on spending choices, money sent to family, religion or culture. Sending money home is a fixed commitment, not a problem to cut.\\n7. If the user mentions not affording food or rent now, threats from creditors, gambling harm, or feeling hopeless or unsafe: set \\\"escalate\\\": true, reply with care, and point to free help (Citizens Advice, StepChange; Samaritans on 116 123 for emotional crisis). Do not continue budgeting advice in that turn.\\n8. If you did not understand the transcript, say so kindly and ask them to repeat.\\n9. Never ask for passwords, card numbers or bank login details.\\n\\nOUTPUT JSON only, no code fences:\\n{\\\"reply_text\\\": \\\"...in {language}...\\\", \\\"reply_en\\\": \\\"...\\\", \\\"option_ids\\\": [\\\"save_weekly\\\"], \\\"signpost_ids\\\": [\\\"stepchange\\\"], \\\"escalate\\\": false}\"), messages: fixed } } }];"
+      }
+    },
+    {
+      "name": "Ask Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        0
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "name": "Anthropic account"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify(Object.assign({}, $json.anthropic_body, { system: $json.anthropic_body.system + '\\n\\nLANGUAGE (most important): write reply_text in ' + ($json.language === 'ar' ? 'Arabic (Modern Standard, masculine forms)' : 'English') + ', whatever language the user typed in. reply_en is always English.' })) }}",
+        "options": {
+          "timeout": 45000
+        }
+      }
+    },
+    {
+      "name": "Guard reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const b = $('Build FACTS').first().json;\nconst facts = b.facts, OPT = b.options_full;\nconst textBlock = ($input.first().json.content || []).find(x => x.type === 'text') || {};\nlet out = null;\ntry { out = JSON.parse((textBlock.text || '').replace(/^\\s*```(json)?/, '').replace(/```\\s*$/, '')); } catch (e) { out = null; }\nconst allowed = new Set((JSON.stringify(facts).match(/\\d+/g) || []).map(n => String(parseInt(n, 10))));\nconst used = ((out && out.reply_en) || '').match(/£\\s?(\\d+)/g) || [];\nconst bad = used.some(m => !allowed.has(m.replace(/\\D/g, '')));\nlet reason = null;\nif (!out || !out.reply_text || bad) {\n  reason = !out ? 'unparseable' : 'invented_number';\n  const fb = { en: 'Sorry, I could not work that out safely. The forecast shows a hard few weeks coming. Citizens Advice and StepChange can help for free.',\n               ar: 'عذرًا، لم أستطع الإجابة بدقة. التوقعات تُظهر أسابيع صعبة قادمة. منظمة Citizens Advice و StepChange تساعدان مجانًا.' };\n  out = { reply_text: fb[b.language] || fb.en, reply_en: fb.en, option_ids: [], signpost_ids: ['citizens_advice', 'stepchange'], escalate: false };\n}\nlet sig = (out.signpost_ids || []).filter(id => facts.signposts[id]);\nif (out.escalate) sig = ['citizens_advice', 'stepchange', ...sig];\nif (!sig.length) sig = ['citizens_advice'];\nconst ids = (out.option_ids || []).filter(id => OPT[id]);\nconst plan = ids.map(id => ({ id, title: OPT[id].title, effect: OPT[id].effect }));\nconst apply = ids.map(id => OPT[id].apply).filter(Boolean);\nconst forecastOptions = apply.length ? { billChanges: Object.assign({}, ...apply.map(a => a.billChanges || {})) } : null;\nreturn [{ json: {\n  text: out.reply_text, text_en: out.reply_en, audio: null, language: b.language,\n  user_transcript: b.user_transcript, plan, forecast_options: forecastOptions,\n  signposts: [...new Set(sig)].map(id => facts.signposts[id]),\n  escalate: !!out.escalate, guarded: !!reason, guard_reason: reason,\n  disclaimer: 'AI coach. Not regulated financial advice.'\n} }];"
+      }
+    },
+    {
+      "name": "Respond to app",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1344,
+        0
+      ],
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "POST /coach": {
+      "main": [
+        [
+          {
+            "node": "Forecast",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Forecast": {
+      "main": [
+        [
+          {
+            "node": "Forecast with monthly insurance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Forecast with monthly insurance": {
+      "main": [
+        [
+          {
+            "node": "Build FACTS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build FACTS": {
+      "main": [
+        [
+          {
+            "node": "Ask Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Claude": {
+      "main": [
+        [
+          {
+            "node": "Guard reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard reply": {
+      "main": [
+        [
+          {
+            "node": "Respond to app",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "note": "Export of the live workflow on futureyou.app.n8n.cloud. After import, re-select the Anthropic credential on each Claude node. Contains no secrets."
+  }
+}
