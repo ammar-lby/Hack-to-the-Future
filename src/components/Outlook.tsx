@@ -5,6 +5,7 @@ import { CartesianGrid, Line, LineChart, ReferenceArea, ReferenceDot, ReferenceL
 import { Money } from "@/components/Money";
 import { SpeakButton } from "@/components/SpeakButton";
 import { RiskWhy } from "@/components/RiskWhy";
+import { pick } from "@/lib/l10n";
 import { AffordCheck } from "@/components/AffordCheck";
 import { EmergencyPot } from "@/components/EmergencyPot";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,14 @@ export function Outlook({ compact = false }: { compact?: boolean }) {
       <p className="text-base text-muted-foreground">{t("outlookAsOf")} <bdi>{formatDate(data.today)}</bdi></p>
     </div>
     {state.demo && <p className="text-lg text-muted-foreground">{t("outlookDemoNotice")}</p>}
+    {!compact && risk && <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      {[
+        { label: pick(lang, "Lowest point, bad weeks", "أدنى رصيد، أسابيع صعبة"), value: <span className="text-destructive"><Money amount={risk.badCaseBalance} /></span>, note: formatDate(risk.lowestDay) },
+        { label: pick(lang, "Short weeks ahead", "أسابيع صعبة قادمة"), value: <>{weeks.length}</>, note: pick(lang, "in the next 90 days", "خلال ٩٠ يومًا") },
+        { label: pick(lang, "Suggested fix", "الحل المقترح"), value: <><Money amount={risk.saveWeekly} /><span className="text-base font-normal text-muted-foreground"> / {pick(lang, "week", "أسبوع")}</span></>, note: `${risk.weeksUntil} ${t("outlookWeeks")}` },
+      ].map((k, i) => <div key={i} className="rounded-2xl border border-border bg-card p-4 shadow-sm"><p className="text-base text-muted-foreground">{k.label}</p><p className="mt-1 text-2xl font-bold text-secondary">{k.value}</p><p className="text-sm text-muted-foreground">{k.note}</p></div>)}
+    </div>}
+    <div className={compact ? "space-y-4" : "space-y-4 rounded-3xl border border-border bg-card p-5 shadow-sm"}>
     <div className="flex flex-wrap gap-x-6 gap-y-2 text-lg font-bold">
       <span className="flex items-center gap-2"><span className="w-8 border-t-[3px] border-primary" />{t("outlookExpected")}</span>
       <span className="flex items-center gap-2"><span className="w-8 border-t-[3px] border-dashed border-secondary" />{t("outlookBadWeeks")}</span>
@@ -68,6 +77,7 @@ export function Outlook({ compact = false }: { compact?: boolean }) {
           {!compact && <ReferenceLine x={index} stroke="var(--muted-foreground)" strokeDasharray="2 3" />}
         </LineChart>
       </ResponsiveContainer>
+    </div>
     </div>
     {risk && <div className="flex flex-wrap items-center gap-2 text-lg font-bold text-destructive"><AlertTriangle className="size-5" aria-hidden />{t("outlookWeekOf")} {formatDate(risk.week)} · {t("outlookShortfall")} <Money amount={risk.shortfall} /></div>}
     {!compact && <>
