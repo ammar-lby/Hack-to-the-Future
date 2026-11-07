@@ -4,7 +4,7 @@ import { speak, stopSpeaking, useSpeakState } from "@/lib/speak";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-/** Large speaker button that reads `text` aloud in the chosen language. */
+/** Compact round speaker button that reads `text` aloud in the chosen language. */
 export function SpeakButton({ id, text, label, inverted }: { id: string; text: string; label: string; inverted?: boolean }) {
   const { t, lang } = useLanguage();
   const s = useSpeakState();
@@ -14,11 +14,12 @@ export function SpeakButton({ id, text, label, inverted }: { id: string; text: s
   const word = active === "loading" ? t("loadingAudio") : active === "playing" ? t("stopAudio") : t("listen");
   return (
     <Button variant="ghost" type="button" onClick={onClick} aria-label={active === "idle" ? `${t("listenTo")} ${label}` : word} aria-busy={active === "loading"}
-      className={cn("inline-flex h-auto min-h-12 min-w-12 shrink-0 whitespace-normal items-center gap-2 rounded-full border-2 px-4 text-base font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring",
-        inverted ? "border-secondary-foreground/60 text-secondary-foreground" : "border-secondary text-secondary",
-        active !== "idle" && (inverted ? "bg-secondary-foreground text-secondary" : "bg-secondary text-secondary-foreground"))}>
+      title={active === "idle" ? `${t("listenTo")} ${label}` : word}
+      className={cn("inline-flex size-11 shrink-0 items-center justify-center rounded-full p-0 transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring",
+        inverted ? "bg-white/15 text-secondary-foreground hover:bg-white/25" : "bg-muted text-primary hover:bg-primary/15",
+        active !== "idle" && (inverted ? "bg-secondary-foreground text-secondary" : "bg-primary text-primary-foreground"))}>
       <Icon aria-hidden className={cn("size-5", active === "loading" && "animate-spin motion-reduce:animate-none")} />
-      <span aria-live="polite">{word}</span>
+      <span className="sr-only" aria-live="polite">{word}</span>
     </Button>
   );
 }

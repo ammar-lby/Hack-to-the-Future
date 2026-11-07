@@ -7,13 +7,13 @@ describe("future message contract and actions", () => {
   it("sends the exact requested field names and unmodified forecast numbers", () => {
     const data = buildOutlook(null), risk = data.risks[0];
     if (!risk) throw new Error("Expected demo risk");
-    expect(futureMessagePayload(risk, "ar", data.persona)).toEqual({ risk: { week: "2027-01-04", shortfall: 127, reason: "Car insurance (annual) and Rent due in the same week", fix: "Save £16 a week for 8 weeks" }, language: "ar", persona: { name: "Adam", language: "ar", homeCurrency: "LYD" } });
+    expect(futureMessagePayload(risk, "ar", data.persona)).toEqual({ risk: { week: "2027-01-04", shortfall: 143, reason: "Car insurance (annual) and Rent due in the same week", fix: "Save £16 a week for 9 weeks" }, language: "ar", persona: { name: "Adam", language: "ar", homeCurrency: "LYD" } });
   });
   it("saves the set-aside amount from the risk fix, without moving money", () => {
     const risk = buildOutlook(null).risks[0];
     if (!risk) throw new Error("Expected demo risk");
     saveRiskAction(risk, "setAside");
-    expect(JSON.parse(localStorage.getItem("futureyou.riskAction.2027-01-04.setAside") ?? "null")).toEqual({ week: "2027-01-04", action: "setAside", amount: 16, weeks: 8 });
+    expect(JSON.parse(localStorage.getItem("futureyou.riskAction.2027-01-04.setAside") ?? "null")).toEqual({ week: "2027-01-04", action: "setAside", amount: 16, weeks: 9 });
     expect(hasRiskAction(risk, "setAside")).toBe(true);
     expect(localStorage.getItem("futureyou.profile")).toBeNull();
   });

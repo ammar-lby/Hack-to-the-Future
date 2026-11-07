@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-vi.mock("@/config", () => ({ COACH_WEBHOOK_URL: "https://example.test/webhook/coach", DEMO_TODAY: "2026-11-15" }));
+vi.mock("@/config", () => ({ COACH_WEBHOOK_URL: "https://example.test/webhook/coach", DEMO_TODAY: "2026-11-07" }));
 import { coachPayload, helpTextParts, recognitionLocales, requestCoach } from "@/lib/coach";
 import { buildOutlook } from "@/lib/outlook-data";
 afterEach(() => vi.unstubAllGlobals());

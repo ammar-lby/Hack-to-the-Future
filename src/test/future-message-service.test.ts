@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-vi.mock("@/config", () => ({ FUTURE_MESSAGE_WEBHOOK_URL: "https://example.test/webhook/future-message", DEMO_TODAY: "2026-11-15" }));
+vi.mock("@/config", () => ({ FUTURE_MESSAGE_WEBHOOK_URL: "https://example.test/webhook/future-message", DEMO_TODAY: "2026-11-07" }));
 import { prepareFutureMessage } from "@/lib/future-message";
 import { buildOutlook } from "@/lib/outlook-data";
 
