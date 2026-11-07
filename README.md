@@ -1,24 +1,56 @@
-# Hack to the Future
+# Hack to the Future: Future You
 
-connect to the github repo hack-to-the-future https://github.com/ammar-lby/Hack-to-the-Future
+GreatUniHack 2026, NatWest challenge: AI-Powered Financial Inclusion & Resilience.
 
-This project was built with [Lovable](https://lovable.dev).
+**Future You** is an AI money coach for people with irregular income whose first language isn't English. It forecasts 90 days ahead ("financial time travel"), spots weeks where money will run short, and plays a message from "Future You" in the user's own language, with a coach they can type or talk to.
 
-## Build with Lovable
+> Most budgeting apps tell you where your money went. Future You tells you where it's going.
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/89fab9d9-0206-46bd-b516-4a5a6459adeb).
+## Team and branches
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+| Person | Role | Branch | Folder |
+|---|---|---|---|
+| Nulara | Frontend (Lovable) | `nulara-frontend` | `frontend/` |
+| Melanius | n8n setup, Claude workflows (`/coach`, `/future-message`) | `melanius-n8n` | `n8n/` |
+| Ammar | Persona data, forecast, "simulate next week", "Can I afford it?" | `ammar-forecast` | `forecast/`, `data/` |
+| Ibrahim | ElevenLabs voice (`/speak`), audio playback, backup audio | `ibrahim-voice` | `voice/` |
 
-## Development
+## How we work
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+1. Work on **your own branch**, in **your own folder**.
+2. Commit small and often: `git add <your folder>`, `git commit -m "..."`, `git push`.
+3. When something works, merge it into `main` (open a pull request, or `git checkout main && git pull && git merge <your-branch> && git push`).
+4. Always `git pull` before you start.
+5. **Never commit API keys.** Keys live in n8n credentials only.
+6. Feature freeze at **4:30 pm**. Everything should be on `main` by 5:00 pm.
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+## Structure
+
 ```
+data/adam.json        persona: Adam, delivery rider in Manchester, Arabic speaker (Ammar)
+forecast/forecast.js   90-day forecast, plain JavaScript, no AI (Ammar)
+forecast/test.js       run: node forecast/test.js
+n8n/                   exported n8n workflows + the API contracts (Melanius, Ibrahim)
+frontend/              notes for the Lovable app (Nulara)
+voice/                 ElevenLabs notes and backup demo MP3s (Ibrahim)
+```
+
+## How it fits together
+
+```
+Lovable app ──► forecast(adam.json)            → chart, risk weeks
+            ──► n8n /future-message  → Claude → ElevenLabs → { text, audio }
+            ──► n8n /coach           → Claude → ElevenLabs → { text, audio }
+```
+
+The forecast is plain code. **The AI never calculates numbers; it only explains them.**
+
+## Timeline (12:00 to 6:00 pm)
+
+| Time | What |
+|---|---|
+| 12:00–1:15 | Accounts, n8n set up, persona data, agree the contracts in `n8n/README.md` |
+| 1:15–3:00 | Screens, forecast, Claude workflows, ElevenLabs `/speak` |
+| 3:00–4:30 | Join everything up, Arabic, proactive alert, stretch goals |
+| 4:30–5:15 | Feature freeze, bug fixes, merge to `main` |
+| 5:15–6:00 | Slides, rehearse twice, record a backup video |
