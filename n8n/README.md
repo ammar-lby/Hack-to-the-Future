@@ -14,6 +14,8 @@ To find a URL yourself: open the workflow in n8n, double-click the first (Webhoo
 
 How the AI is kept honest (say this to judges): code computes the forecast and prices each option (`Save £16 a week…` covers the £143 gap; paying the car insurance monthly at about £62 clears it). Claude only explains those numbers. A guard node rejects any reply containing a £ figure that isn't in the forecast, and a second guard checks the Arabic translation kept every amount. Any failure falls back to the approved script in `prompts/cached-scripts.md`.
 
+If the app sends its own `forecast` with a coach question (Nulara's CoachChat does), `/coach` uses those numbers instead of calling `/forecast`, so the coach always matches what the Outlook screen shows, including the demo date (15 Nov) and "simulate next week".
+
 `forecast_options` in a coach reply can be posted straight back to `/forecast` to redraw the chart with the suggested change.
 
 **Voice hand-off (Ibrahim):** in `/future-message`, add the ElevenLabs step between **Final message (voice goes after this)** and **Respond live**: read `text` and `language`, write base64 MP3 to `audio`. In `/coach`, add the same step after **Guard reply**. Until then `audio` is `null` and the app shows the text.
