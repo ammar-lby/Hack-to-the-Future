@@ -8,14 +8,14 @@ import { useLanguage } from "@/lib/i18n";
 import { loadProfile } from "@/lib/profile";
 import { buildOutlook, type OutlookData } from "@/lib/outlook-data";
 import { hasRiskAction, prepareFutureMessage, saveCoachRisk, saveRiskAction, type RiskAction } from "@/lib/future-message";
-import { cachedFutureMessage } from "@/lib/cached-future-message";
-import { pauseAudio, playAudio, stopSpeaking, useSpeakState } from "@/lib/speak";
+import { cachedFutureMessage, liveFutureScript } from "@/lib/cached-future-message";
+import { pauseAudio, playAudio, speak, stopSpeaking, useSpeakState } from "@/lib/speak";
 
 const AUDIO_ID = "future-message";
 export function FutureMessage() {
   const { t, lang } = useLanguage();
   const [data, setData] = useState<OutlookData | null>(null);
-  const [message, setMessage] = useState<{ text: string; src: string } | null>(null);
+  const [message, setMessage] = useState<{ text: string; src: string | null } | null>(null);
   const [status, setStatus] = useState<"preparing" | "ready" | "fallback">("preparing");
   const [attempt, setAttempt] = useState(0);
   const [saved, setSaved] = useState({ setAside: false, insuranceReminder: false });
@@ -34,8 +34,10 @@ export function FutureMessage() {
       if (!controller.signal.aborted) { setMessage({ text: result.text, src: "data:audio/mpeg;base64," + result.audio }); setStatus("ready"); }
     }).catch(() => {
       if (disposed) return;
-      const cached = cachedFutureMessage(lang, data.persona.name);
-      if (cached) { setMessage(cached); setStatus("ready"); } else setStatus("fallback");
+      const cached = cachedFutureMessage(lang, data.persona.name, risk);
+      if (cached) { setMessage(cached); setStatus("ready"); return; }
+      if (lang === "en" || lang === "ar") { setMessage({ text: liveFutureScript(lang, data.persona.name, risk), src: null }); setStatus("ready"); return; }
+      setStatus("fallback");
     }).finally(() => window.clearTimeout(timeout));
     return () => { disposed = true; controller.abort(); window.clearTimeout(timeout); stopSpeaking(); };
   }, [data, risk, lang, attempt]);
@@ -50,7 +52,10 @@ export function FutureMessage() {
   const play = async () => {
     if (playing) { pauseAudio(AUDIO_ID); return; }
     setError(null);
-    try { await playAudio(message ? message.src : placeholderAudio, AUDIO_ID); } catch { setError("futureAudioError"); }
+    try {
+      if (message && !message.src) { await speak(message.text, lang, AUDIO_ID); return; }
+      await playAudio(message?.src ?? placeholderAudio, AUDIO_ID);
+    } catch { setError("futureAudioError"); }
   };
   return <section aria-labelledby="future-message-title" className="rounded-2xl border border-primary/30 bg-card p-4 shadow-sm sm:p-5">
     <h2 id="future-message-title" className="mb-3 text-xl font-bold text-secondary">{t("futureTitle")}</h2>

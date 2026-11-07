@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Bolt, Bus, Home, Send, ShoppingBasket, type LucideIcon } from "lucide-react";
-import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { Money, MoneyModeToggle } from "@/components/Money";
@@ -67,6 +67,7 @@ function Dashboard() {
 function DashboardBody({ data }: { data: DashboardData }) {
   const { t } = useLanguage();
   const total = data.spending || 1;
+  const slices = data.categories.filter((c) => c.amount > 0);
   const say = (n: number) => `${Math.round(n * 100) / 100} ${t("poundsWord")}`;
   const fill = (k: Parameters<typeof t>[0], v: Record<string, string>) => Object.entries(v).reduce((a, [x, y]) => a.replace(`{${x}}`, y), t(k));
   return <>
@@ -90,42 +91,36 @@ function DashboardBody({ data }: { data: DashboardData }) {
     <section aria-labelledby="split-heading" className="space-y-4">
       <h2 id="split-heading" className="text-2xl font-bold text-secondary">{t("spendingSplit")}</h2>
       {data.spending === 0 && <p role="status" className="text-lg text-muted-foreground">{t("spendingEmpty")}</p>}
-      <div className="rounded-3xl border border-border bg-card p-4 shadow-sm">
-        <div role="img" aria-label={t("spendingChartLabel")} className="relative mx-auto h-56 w-56">
+      <div className="grid items-center gap-6 rounded-3xl border border-border bg-card p-6 shadow-sm xl:grid-cols-[200px_minmax(0,1fr)]">
+        <div role="img" aria-label={t("spendingChartLabel")} className="mx-auto size-52">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart aria-hidden="true" tabIndex={-1}>
-              <Pie rootTabIndex={-1} data={data.categories} dataKey="amount" nameKey="key" innerRadius="62%" outerRadius="100%" paddingAngle={2} stroke="none" isAnimationActive={false}>
-                {data.categories.map((c) => <Cell key={c.key} fill={categoryStyle[c.key].color} />)}
+              <Pie rootTabIndex={-1} data={slices} dataKey="amount" nameKey="key" outerRadius="95%" paddingAngle={1} stroke="var(--card)" strokeWidth={3} isAnimationActive
+                labelLine={false} label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                  if (!percent || percent < 0.06) return null;
+                  const r = innerRadius + (outerRadius - innerRadius) * 0.6, a = -(midAngle ?? 0) * Math.PI / 180;
+                  return <text x={cx + r * Math.cos(a)} y={cy + r * Math.sin(a)} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={15} fontWeight={700}>{Math.round(percent * 100)}%</text>;
+                }}>
+                {slices.map((c) => <Cell key={c.key} fill={categoryStyle[c.key].color} />)}
               </Pie>
+              <Tooltip formatter={(value: number, key: string) => [`£${value.toFixed(2)}`, t(key as CategoryKey)]} />
             </PieChart>
           </ResponsiveContainer>
-          <div className="absolute inset-0 flex items-center justify-center text-2xl font-bold text-secondary"><Money amount={data.spending} /></div>
         </div>
+        <ul className="min-w-0 divide-y divide-border">
+          {data.categories.map((c) => {
+            const { color } = categoryStyle[c.key];
+            const pct = Math.round((c.amount / total) * 100);
+            return <li key={c.key} className="flex items-center gap-3 py-3">
+              <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: color }} aria-hidden />
+              <span className="min-w-0 flex-1 text-lg font-bold leading-tight">{t(c.key)}</span>
+              <span className="text-base text-muted-foreground"><bdi dir="ltr">{pct}%</bdi></span>
+              <span className="text-end text-lg font-bold"><Money amount={c.amount} /></span>
+              <SpeakButton id={c.key} label={t(c.key)} text={fill("sayCategory", { category: t(c.key), amount: say(c.amount), pct: String(pct) })} />
+            </li>;
+          })}
+        </ul>
       </div>
-      <ul className="space-y-3">
-        {data.categories.map((c) => {
-          const { icon: Icon, color } = categoryStyle[c.key];
-          const pct = Math.round((c.amount / total) * 100);
-          return <li key={c.key} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-            <div className="flex items-center gap-4">
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-muted text-secondary"><Icon aria-hidden className="size-6" /></span>
-              <div className="min-w-0 flex-1">
-                <div className="grid min-w-0 grid-cols-1 gap-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline">
-                  <h3 className="text-lg font-bold">{t(c.key)}</h3>
-                  <span className="text-xl font-bold"><Money amount={c.amount} /></span>
-                </div>
-                <div className="mt-2 h-3 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label={t(c.key)} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
-                  <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
-                </div>
-                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                  <p className="text-base text-muted-foreground"><bdi dir="ltr">{pct}%</bdi> {t("ofSpending")}</p>
-                  <SpeakButton id={c.key} label={t(c.key)} text={fill("sayCategory", { category: t(c.key), amount: say(c.amount), pct: String(pct) })} />
-                </div>
-              </div>
-            </div>
-          </li>;
-        })}
-      </ul>
     </section>
 
     <Outlook compact />

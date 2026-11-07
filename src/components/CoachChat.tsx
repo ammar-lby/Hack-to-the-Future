@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from "react";
-import { Loader2, Mic, Pause, Play, RefreshCw, Send, Square } from "lucide-react";
+import { Loader2, Mic, Pause, Play, RefreshCw, Send, Square, TriangleAlert } from "lucide-react";
 import { COACH_WEBHOOK_URL } from "@/config";
 import { Button } from "@/components/ui/button";
 import { Money } from "@/components/Money";
@@ -11,6 +11,11 @@ import { getRecognitionConstructor, helpTextParts, recognitionLocales, requestCo
 import { canRecord, startRecording, transcribe, type Recorder } from "@/lib/transcribe";
 import { pauseAudio, playAudio, stopSpeaking, useSpeakState } from "@/lib/speak";
 import { cn } from "@/lib/utils";
+
+const AI_WARNING: Partial<Record<string, string>> & { en: string } = {
+  en: "You are talking to an AI, not a person. It can make mistakes and is not regulated financial advice. It will never ask for your bank details. For free, expert help, contact Citizens Advice or StepChange. If you are struggling, call Samaritans on 116 123.",
+  ar: "أنت تتحدث مع ذكاء اصطناعي، وليس مع شخص. قد يخطئ، وما يقدّمه ليس نصيحة مالية مرخّصة. لن يطلب منك أبدًا بيانات حسابك البنكي. للحصول على مساعدة مجانية من خبراء، تواصل مع Citizens Advice أو StepChange. إذا كنت تمر بوقت صعب، اتصل بـ Samaritans على الرقم 116 123.",
+};
 
 const SUGGESTIONS: Partial<Record<string, string[]>> = {
   en: ["Why will January be hard?", "Can I send £150 home this month?", "What if I pay my car insurance monthly?"],
@@ -115,6 +120,10 @@ export function CoachChat() {
   }
   return <section className="space-y-5">
     <h1 className="text-3xl font-bold text-secondary">{t("coachTitle")}</h1>
+    <div role="note" className="flex gap-3 rounded-2xl border border-accent bg-accent/25 p-4">
+      <TriangleAlert aria-hidden className="mt-0.5 size-6 shrink-0 text-primary" />
+      <p dir="auto" className="text-base leading-relaxed">{AI_WARNING[lang] ?? AI_WARNING.en}</p>
+    </div>
     {risk && <div className="border-s-4 border-primary ps-4"><h2 className="text-xl font-bold">{t("coachContext")}</h2><p className="mt-2 text-lg">{t("outlookWeekOf")} {date(risk.week)} · {t("outlookShortfall")} <Money amount={risk.shortfall} className="font-bold" /></p><p className="mt-2 text-lg">{t("outlookSave")} <Money amount={risk.saveWeekly} /> {t("outlookWeeklyFor")} {risk.weeksUntil} {t("outlookWeeks")}</p></div>}
     {!COACH_WEBHOOK_URL && <p role="status" className="text-lg text-muted-foreground">{t("coachUnavailable")}</p>}
     <div role="log" aria-label={t("coachChatLabel")} aria-relevant="additions text" className="min-h-36 space-y-4">
