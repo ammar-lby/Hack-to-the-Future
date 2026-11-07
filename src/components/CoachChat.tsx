@@ -8,6 +8,7 @@ import { buildOutlook } from "@/lib/outlook-data";
 import { loadProfile } from "@/lib/profile";
 import type { ForecastRisk } from "@/lib/forecast";
 import { getRecognitionConstructor, helpTextParts, recognitionLocales, requestCoach, type ChatMessage, type RecognitionInstance } from "@/lib/coach";
+import { canRecord, startRecording, transcribe, type Recorder } from "@/lib/transcribe";
 import { pauseAudio, playAudio, stopSpeaking, useSpeakState } from "@/lib/speak";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,8 @@ export function CoachChat() {
   const [listening, setListening] = useState(false);
   const [micError, setMicError] = useState(false);
   const [audioError, setAudioError] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const recorder = useRef<Recorder | null>(null);
   const recognition = useRef<RecognitionInstance | null>(null);
   const controller = useRef<AbortController | null>(null);
   const busy = useRef(false);
@@ -29,14 +32,15 @@ export function CoachChat() {
   const end = useRef<HTMLDivElement | null>(null);
   const audio = useSpeakState();
   useEffect(() => {
-    setSupported(Boolean(getRecognitionConstructor()));
+    setSupported(canRecord() || Boolean(getRecognitionConstructor()));
     try {
       const value = JSON.parse(window.localStorage.getItem("futureyou.coachRisk") ?? "null");
       if (value && typeof value.week === "string" && typeof value.shortfall === "number" && typeof value.saveWeekly === "number" && typeof value.weeksUntil === "number") setRisk(value);
     } catch { /* No stored context. */ }
-    return () => { recognition.current?.abort(); controller.current?.abort(); stopSpeaking(); };
+    return () => { recorder.current?.cancel(); recognition.current?.abort(); controller.current?.abort(); stopSpeaking(); };
   }, []);
   useEffect(() => {
+    recorder.current?.cancel(); recorder.current = null; setTranscribing(false);
     recognition.current?.abort(); setListening(false); controller.current?.abort(); busy.current = false;
     setSending(false); setMessages([]); setFailed(false); pending.current = null; setInput(""); stopSpeaking();
   }, [lang]);
@@ -66,7 +70,23 @@ export function CoachChat() {
     const next = [...messages, { role: "user" as const, content: input.trim() }];
     setMessages(next); setInput(""); void send(next);
   }
+  async function toggleRecording() {
+    if (recorder.current) {
+      const active = recorder.current; recorder.current = null; setListening(false); setTranscribing(true);
+      const request = new AbortController(); const timeout = window.setTimeout(() => request.abort(), 30000);
+      try {
+        const text = await transcribe(await active.stop(), request.signal);
+        setInput(previous => `${previous.trim()} ${text}`.trim().slice(0, 4000));
+      } catch { setMicError(true); }
+      finally { window.clearTimeout(timeout); setTranscribing(false); }
+      return;
+    }
+    stopSpeaking(); setMicError(false);
+    try { recorder.current = await startRecording(); setListening(true); } catch { setMicError(true); }
+  }
   function toggleMic() {
+    if (transcribing) return;
+    if (canRecord()) { void toggleRecording(); return; }
     if (listening) { recognition.current?.stop(); return; }
     const Constructor = getRecognitionConstructor();
     if (!Constructor) return;
@@ -106,8 +126,9 @@ export function CoachChat() {
     <form onSubmit={submit} className="space-y-3 border-t border-border pt-4">
       <label htmlFor="coach-message" className="block text-lg font-bold">{t("coachQuestion")}</label>
       <textarea id="coach-message" value={input} onChange={event => { setInput(event.target.value); setFailed(false); }} maxLength={4000} rows={2} className="w-full rounded-lg border-2 border-input bg-card p-3 text-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring" />
-      <div className="flex gap-3">{supported && <Button type="button" variant={listening ? "destructive" : "outline"} onClick={toggleMic} aria-label={t(listening ? "coachMicStop" : "coachMic")} aria-pressed={listening} disabled={sending} className="size-14 shrink-0 [&_svg]:size-6">{listening ? <Square aria-hidden /> : <Mic aria-hidden />}</Button>}<Button type="submit" disabled={!input.trim() || sending || listening} className="min-h-14 flex-1 text-lg"><Send aria-hidden className="rtl:rotate-180" />{t(sending ? "coachSending" : "coachSend")}</Button></div>
+      <div className="flex gap-3">{supported && <Button type="button" variant={listening ? "destructive" : "outline"} onClick={toggleMic} aria-label={t(listening ? "coachMicStop" : "coachMic")} aria-pressed={listening} disabled={sending || transcribing} className="size-14 shrink-0 [&_svg]:size-6">{listening ? <Square aria-hidden /> : <Mic aria-hidden />}</Button>}<Button type="submit" disabled={!input.trim() || sending || listening} className="min-h-14 flex-1 text-lg"><Send aria-hidden className="rtl:rotate-180" />{t(sending ? "coachSending" : "coachSend")}</Button></div>
       {listening && <p role="status" className="text-lg text-primary">{t("coachListening")}</p>}
+      {transcribing && <p role="status" className="text-lg text-primary">{t("coachSending")}</p>}
       {supported === false && <p className="text-base text-muted-foreground">{t("coachMicUnsupported")}</p>}
       {micError && <p role="alert" className="text-lg text-destructive">{t("coachMicError")}</p>}
       <p className="text-base text-muted-foreground">{t("coachDisclaimer")}</p>
