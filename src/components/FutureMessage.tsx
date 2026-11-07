@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n";
 import { loadProfile } from "@/lib/profile";
 import { buildOutlook, type OutlookData } from "@/lib/outlook-data";
-import { hasRiskAction, prepareFutureMessage, saveCoachRisk, saveRiskAction, type RiskAction } from "@/lib/future-message";
+import { prepareFutureMessage, saveCoachRisk, saveRiskAction, type RiskAction } from "@/lib/future-message";
 import { cachedFutureMessage, liveFutureScript } from "@/lib/cached-future-message";
 import { pauseAudio, playAudio, speak, stopSpeaking, useSpeakState } from "@/lib/speak";
 
@@ -32,7 +32,7 @@ export function FutureMessage() {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 20000);
     setStatus("preparing"); setMessage(null); setError(null);
-    try { setSaved({ setAside: hasRiskAction(risk, "setAside"), insuranceReminder: hasRiskAction(risk, "insuranceReminder") }); } catch { /* Storage may be blocked. */ }
+    setSaved({ setAside: false, insuranceReminder: false }); // Fresh buttons on every load, so a demo always starts clean.
     prepareFutureMessage(risk, lang, data.persona, controller.signal).then(result => {
       if (!controller.signal.aborted) { setMessage({ text: result.text, src: "data:audio/mpeg;base64," + result.audio }); setStatus("ready"); }
     }).catch(() => {

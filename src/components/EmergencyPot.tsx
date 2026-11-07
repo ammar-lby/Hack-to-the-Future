@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CheckCircle2, PiggyBank, ShieldCheck } from "lucide-react";
 import { Money } from "@/components/Money";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,6 @@ export function EmergencyPot({ data }: { data: OutlookData }) {
   const { lang } = useLanguage();
   const L = (en: string, ar: string) => pick(lang, en, ar);
   const [started, setStarted] = useState<string | null>(null);
-  useEffect(() => { try { setStarted(window.localStorage.getItem(KEY)); } catch { /* storage blocked */ } }, []);
   const risk = data.risks[0];
   const weekly = risk?.saveWeekly ?? 20;
   const gap = risk?.shortfall ?? 0;
