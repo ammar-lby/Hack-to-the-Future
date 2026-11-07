@@ -2,12 +2,14 @@
 
 Nov 7, 2026 · @Melanius
 
+> **Update (14:15): the persona is now Adam** (`data/adam.json`, Ammar's forecast in `forecast/forecast.js`). Live numbers: in slow weeks Adam is **£143 short from the week of 4 January**, when his £690 annual car insurance lands next to £600 rent. Fixes computed by code: **save £16 a week for 9 weeks** (covers the gap) or **pay the car insurance monthly** (about £62, clears it). Endpoints are `/forecast`, `/coach` and `/future-message`; see `n8n/README.md`. Sections 3, 4, 9 and 10 below were drafted for the earlier persona; their structure still applies, but use the numbers above and the scripts in `n8n/prompts/cached-scripts.md`.
+
 ## Assumptions
 
 The build is a browser web app demoed on one laptop, judged live on stage with projector audio, and there is no real phone call: the "call" is an in-app incoming-call screen. If any of these is wrong, only sections 1 and 9 change.
 
-- **One hero persona** drives the whole demo: Amira, 29, Deliveroo-style rider in Manchester, arrived from Syria 2 years ago, Arabic first language, irregular weekly income. A second English persona is optional.
-- **Roles:** P1 Frontend lead (Lovable: shell, language, accessibility). P2 Frontend (call screen, chart, coach UI). P3 Backend AI (n8n /coach, Claude prompts). P4 Data + voice + pitch (forecast script, ElevenLabs, /future-call, demo audio, deck).
+- **One hero persona** drives the whole demo: Adam, 27, Deliveroo rider in Manchester from Libya, Arabic first language, paid weekly (£230–£420). A second English persona is optional.
+- **Roles:** P1 Frontend lead (Lovable: shell, language, accessibility). P2 Frontend (call screen, chart, coach UI). P3 Backend AI (n8n /coach, Claude prompts). P4 Data + voice + pitch (forecast script, ElevenLabs, /future-message, demo audio, deck).
 - **Voice:** ElevenLabs TTS with a multilingual model for EN + AR and ElevenLabs speech-to-text for replies. A real-time ElevenLabs conversational agent is a COULD, not the core path. Confirm current model IDs in the ElevenLabs dashboard at minute 0.
 - **Voice cloning:** we use a stock warm voice by default. The "clone" moment is shown with a team member's own voice, recorded with written consent, which doubles as our consent-flow demo.
 - **Forecast runs in n8n** as a Code node (JS), so there is one deployment. The same file also runs locally with Node for testing.
@@ -19,7 +21,7 @@ The biggest risk is not the tech, it is a demo that depends on four live service
 
 | # | Risk | What breaks | Mitigation | Owner |
 | --- | --- | --- | --- | --- |
-| 1 | Live chain latency (Claude → ElevenLabs → browser) | 6–15 s of silence on stage after "Answer call" | Cache: `/future-call` returns a pre-generated MP3 URL when `demo_mode=true`. Live path only generates once per persona+language and stores the result. Show a "connecting…" ring animation that covers 3 s. Keep scripts under 70 words. | P4 |
+| 1 | Live chain latency (Claude → ElevenLabs → browser) | 6–15 s of silence on stage after "Answer call" | Cache: `/future-message` returns a pre-generated MP3 URL when `demo_mode=true`. Live path only generates once per persona+language and stores the result. Show a "connecting…" ring animation that covers 3 s. Keep scripts under 70 words. | P4 |
 | 2 | Browser audio autoplay block | Call audio never plays | Audio only ever starts from a user gesture: the big "Answer" button calls `audio.play()` in its click handler. Pre-create the `Audio` element on that click, then set `src`. Test in the exact demo browser (Chrome) by 2:00. | P2 |
 | 3 | Arabic quality: voice, RTL layout, translation | Robotic or wrong-dialect audio, broken mirrored UI, judges can't follow | Our Arabic-speaking teammate native-checks the first Arabic script by 2:30 and every Arabic clip by 4:00, and asks the live coach question on stage. Use Modern Standard Arabic, short sentences, numbers spoken as words by Claude. Set `dir="rtl"` + `lang="ar"` on `<html>`; keep the chart LTR. Show English subtitles under the Arabic call so judges follow. | P1 + P4 |
 | 4 | CORS and payload issues Lovable ↔ n8n | Fetch fails in browser though it works in Postman | Every n8n webhook: Respond to Webhook node with header `Access-Control-Allow-Origin: *` (hackathon only) and allow OPTIONS. Lock the exact JSON contracts in section 3 at minute 20. Frontend builds against a local mock JSON first, switches URL via one config constant. Return audio as a URL or base64 inside JSON, never as a raw binary response. | P3 |
@@ -34,7 +36,7 @@ The MUST list is one persona, two languages, one forecast, one call, one coach t
 **MUST (the demo cannot happen without these)**
 
 - [ ] Language picker on first launch (EN, AR), driven by a config array; sets `lang`/`dir` and the voice
-- [ ] Dashboard for persona Amira: balance, "next 90 days" chart with the red Feb shortfall week, one plain-language risk card
+- [ ] Dashboard for persona Adam: balance, "next 90 days" chart with the red Feb shortfall week, one plain-language risk card
 - [ ] Forecast script (code, not LLM) producing the forecast JSON in section 3
 - [ ] Incoming-call screen with user-gesture "Answer" button, plays Future You audio in EN and AR, with on-screen transcript
 - [ ] Spoken AI disclosure at the start of every call
@@ -85,11 +87,11 @@ Freeze these at 0:20. Frontend builds against `mock/*.json` copies of the respon
 ]
 ```
 
-**Persona** (`persona_amira.json`, abridged; full file is attached in chat):
+**Persona** (`persona_adam.json`, abridged; full file is attached in chat):
 
 ```json
 {
-  "persona_id": "amira", "display_name": "Amira", "language": "ar",
+  "persona_id": "adam", "display_name": "Adam", "language": "ar",
   "as_of": "2026-11-16", "currency": "GBP", "opening_balance": 144,
   "income": { "type": "irregular_weekly",
     "source_label": "Delivery platform payouts (paid Mondays)",
@@ -115,12 +117,12 @@ Freeze these at 0:20. Frontend builds against `mock/*.json` copies of the respon
 
 ```json
 // request
-{ "persona_id": "amira",
+{ "persona_id": "adam",
   "scenario": { "set_aside_per_good_week": 20, "spread_yearly": ["insurance"] } }  // scenario optional
 
 // response (real output of forecast.js, days[] trimmed)
 {
-  "persona_id": "amira", "as_of": "2026-11-16", "horizon_days": 90, "currency": "GBP",
+  "persona_id": "adam", "as_of": "2026-11-16", "horizon_days": 90, "currency": "GBP",
   "method": "Weekly income = 50% median of last 8 weeks + 50% same week last year. ...",
   "usual_weekly_income": 428,
   "scenario": { "set_aside_per_good_week": 0, "spread_yearly": [], "total_set_aside": 0 },
@@ -142,21 +144,21 @@ Freeze these at 0:20. Frontend builds against `mock/*.json` copies of the respon
 }
 ```
 
-**`POST /future-call`**
+**`POST /future-message`**
 
 ```json
 // request
-{ "persona_id": "amira", "language": "ar", "risk_id": "risk_2027-02-08", "demo_mode": true }
+{ "persona_id": "adam", "language": "ar", "risk_id": "risk_2027-02-08", "demo_mode": true }
 
 // response
 {
-  "call_id": "amira_ar_risk_2027-02-08",
+  "call_id": "adam_ar_risk_2027-02-08",
   "language": "ar", "dir": "rtl",
   "caller_label": "Future You · February 2027",
   "disclosure_text": "هذه رسالة من مساعد ذكاء اصطناعي، وليست نصيحة مالية منظّمة.",
   "script_text": "<full script in the user's language, disclosure first>",
   "subtitle_en": "<English version, shown under Arabic for judges>",
-  "audio_url": "/audio/amira_ar_future_call.mp3",   // cached: static file in Lovable public/
+  "audio_url": "/audio/adam_ar_future_call.mp3",   // cached: static file in Lovable public/
   "audio_base64": null,                              // live: mp3 as base64 instead
   "mime": "audio/mpeg",
   "cached": true,
@@ -168,7 +170,7 @@ Freeze these at 0:20. Frontend builds against `mock/*.json` copies of the respon
 
 ```json
 // request
-{ "persona_id": "amira", "language": "ar", "session_id": "s1", "demo_mode": false,
+{ "persona_id": "adam", "language": "ar", "session_id": "s1", "demo_mode": false,
   "input": { "type": "audio", "audio_base64": "<webm/opus>", "mime": "audio/webm" },
   // or "input": { "type": "text", "text": "What can I do?" }
   "history": [ { "role": "user", "text": "..." }, { "role": "coach", "text": "..." } ] }
@@ -199,7 +201,7 @@ The `plan[].effect` strings and `scenario` come from re-running the forecast in 
 
 ```json
 // request
-{ "persona_id": "amira", "action": "poll" }        // or "action": "ack", "alert_id": "..."
+{ "persona_id": "adam", "action": "poll" }        // or "action": "ack", "alert_id": "..."
 // response
 { "pending": true,
   "alert": { "alert_id": "a_2027-02-08", "risk_id": "risk_2027-02-08", "severity": "high",
@@ -208,7 +210,7 @@ The `plan[].effect` strings and `scenario` come from re-running the forecast in 
 
 ## 4. Forecast logic
 
-The script below has been run on the persona: Amira is **£140 short in the week of 8 Feb 2027** (rent £650 on 9 Feb + scooter insurance £420 on 10 Feb, in a quiet week worth £356 vs her usual £428). Two coach suggestions close the gap, and both results come from code.
+The script below has been run on the persona: Adam is **£140 short in the week of 8 Feb 2027** (rent £650 on 9 Feb + scooter insurance £420 on 10 Feb, in a quiet week worth £356 vs her usual £428). Two coach suggestions close the gap, and both results come from code.
 
 | Scenario | Feb 8 week | Lowest balance in 90 days |
 | --- | --- | --- |
@@ -219,12 +221,12 @@ The script below has been run on the persona: Amira is **£140 short in the week
 
 **How it works (explain this to judges in one breath):** weekly income = half your recent typical week, half the same week last year. That last-year half is the "financial time travel": it knows January and February are slow for riders because they were last year. Bills come from the recurring schedule; everyday spending is spread across each day. A week is **high** risk if the balance goes below £0, **watch** if it goes below £50 or would go negative in a bad week (income 15% lower).
 
-**Owner:** P4. Test locally with `node forecast.js persona_amira.json` and `... fix`. In n8n, paste everything above the CLI block into a Code node (Run once for all items) and end with the two lines in the header comment.
+**Owner:** P4. Test locally with `node forecast.js persona_adam.json` and `... fix`. In n8n, paste everything above the CLI block into a Code node (Run once for all items) and end with the two lines in the header comment.
 
 ```javascript
 // Future You — deterministic 90-day cash-flow forecast (no LLM, no randomness).
-// Local:  node forecast.js persona_amira.json            -> baseline
-//         node forecast.js persona_amira.json fix        -> with the coach's two fixes applied
+// Local:  node forecast.js persona_adam.json            -> baseline
+//         node forecast.js persona_adam.json fix        -> with the coach's two fixes applied
 // n8n Code node: paste everything above the "CLI" block, then:
 //   const persona = $input.first().json.persona; const opts = $input.first().json.scenario || {};
 //   return [{ json: forecast(persona, opts) }];
@@ -337,7 +339,7 @@ function forecast(persona, opts = {}) {
 
 // ---- CLI (not needed in n8n) ----
 if (typeof require !== 'undefined' && require.main === module) {
-  const persona = JSON.parse(require('fs').readFileSync(process.argv[2] || 'persona_amira.json', 'utf8'));
+  const persona = JSON.parse(require('fs').readFileSync(process.argv[2] || 'persona_adam.json', 'utf8'));
   const fix = process.argv[3] === 'fix' ? { set_aside_per_good_week: 20, spread_yearly: ['insurance'] } : {};
   const o = forecast(persona, fix);
   console.log(JSON.stringify({ scenario: o.scenario, usual: o.usual_weekly_income, end_balance: o.end_balance,
@@ -452,7 +454,7 @@ Four small workflows, each one Claude call and at most one ElevenLabs call. Keys
 
 - Every Webhook node: Method POST, Respond = "Using Respond to Webhook node", Options → Allowed Origins = `*`.
 - Every Respond to Webhook node: JSON body, header `Access-Control-Allow-Origin: *`.
-- A "Persona store" Code node (copy-paste into each workflow) that returns `persona_amira.json` by `persona_id`.
+- A "Persona store" Code node (copy-paste into each workflow) that returns `persona_adam.json` by `persona_id`.
 - A "Forecast" Code node containing `forecast.js` (section 4).
 - A "Signposts" constant: StepChange, Citizens Advice, MoneyHelper with ids, URLs, one-line why.
 
@@ -463,10 +465,10 @@ Four small workflows, each one Claude call and at most one ElevenLabs call. Keys
 3. Code: Forecast → forecast JSON
 4. Respond to Webhook
 
-**Workflow 1: `/future-call`** (P4)
+**Workflow 1: `/future-message`** (P4)
 
-1. Webhook `/future-call`
-2. IF `demo_mode == true` → Code "Cache lookup": return `{ audio_url: "/audio/amira_{lang}_future_call.mp3", script_text, subtitle_en, cached: true }` from a hard-coded map → Respond. **Done in under 200 ms.**
+1. Webhook `/future-message`
+2. IF `demo_mode == true` → Code "Cache lookup": return `{ audio_url: "/audio/adam_{lang}_future_call.mp3", script_text, subtitle_en, cached: true }` from a hard-coded map → Respond. **Done in under 200 ms.**
 3. Else: Code Persona store → Code Forecast → Code "Build FACTS": name, `headline_risk`, signposts, and OPTIONS made by re-running `forecast()` with `{set_aside_per_good_week: 20}`, `{spread_yearly: ["insurance"]}` and both, recording each scenario's shortfall and lowest balance.
 4. HTTP Request → `POST https://api.anthropic.com/v1/messages`, headers `anthropic-version: 2023-06-01`, body: system = prompt (a), user = `FACTS:` + JSON, `max_tokens: 400`.
 5. Code "Guard": parse JSON; check every £ figure in `script_en` is in FACTS; on failure use the English template script.
@@ -544,12 +546,12 @@ Routes: / (language picker if none chosen, else dashboard), /call, /coach.
 **Prompt 2: dashboard and forecast chart (P1)**
 
 ```text
-Build the dashboard at "/" using data from api.getForecast({persona_id:"amira", scenario?})
+Build the dashboard at "/" using data from api.getForecast({persona_id:"adam", scenario?})
 which returns the JSON in src/mock/forecast.json (shape: days[], weeks[], risks[],
 headline_risk, usual_weekly_income, end_balance).
 
 Layout (top to bottom):
-1. Greeting: "Hi Amira" and today's balance (days[0].balance), large.
+1. Greeting: "Hi Adam" and today's balance (days[0].balance), large.
 2. Risk card (only if headline_risk): red left border, icon, heading "A hard week is coming",
    text "Week of {week_start}: you could be £{shortfall} short." Below it a
    "Why?" disclosure button that expands the drivers list (bill label, amount, date;
@@ -586,10 +588,10 @@ pulsing ring (static if prefers-reduced-motion), caller name "Future You", subti
 
 AUDIO AUTOPLAY RULE: audio may only start inside the Answer button's click handler.
 In that handler: create const audio = new Audio(); call audio.play() on a silent
-/audio/silence.mp3 first to unlock, then call api.getFutureCall({persona_id:"amira",
+/audio/silence.mp3 first to unlock, then call api.getFutureCall({persona_id:"adam",
 language, risk_id, demo_mode: DEMO_MODE}); set audio.src to response.audio_url, or to
 "data:audio/mpeg;base64,"+response.audio_base64; then audio.play().
-If the API takes longer than 4 s or fails, play /audio/amira_{language}_future_call.mp3.
+If the API takes longer than 4 s or fails, play /audio/adam_{language}_future_call.mp3.
 
 State 2 IN CALL: call timer, waveform animation driven by playback, and a live
 transcript panel showing script_text in the current language with dir set
@@ -618,7 +620,7 @@ Build /coach, a voice-first chat with the AI coach.
 - Bottom: one very large circular mic button "Hold to talk" (also works as press to start /
   press to stop for keyboard and switch users; Space and Enter toggle recording). While
   recording: red pulse, "Listening..." text, aria-pressed="true". Use MediaRecorder
-  (audio/webm). On stop, send api.coach({persona_id:"amira", language, session_id, input:
+  (audio/webm). On stop, send api.coach({persona_id:"adam", language, session_id, input:
   {type:"audio", audio_base64, mime:"audio/webm"}, history}). Show the user_transcript as
   the user's bubble, then the coach reply, then auto-play the reply audio (allowed because
   it follows the user's tap). Next to the mic, a small "Type instead" text input.
@@ -641,7 +643,7 @@ Four checkpoints, each 10 minutes, standing, with the demo laptop: **1:30 (first
 | 0:00–0:30 | All four: read this doc, freeze contracts (§3), create Lovable project, n8n workspace, ElevenLabs and Anthropic keys in n8n credentials | ← | ← | ← |
 | 0:30–1:30 | Lovable prompt 1 (shell, languages, a11y, RTL) | Lovable prompt 3 (call screen) against mock JSON + a placeholder MP3 | Shared setup; `/coach` text-only path (Claude + guard) | `forecast.js` into `/forecast` workflow; pick EN and AR voices; generate first test MP3s |
 | **1:30 checkpoint** | Frontend calls live `/forecast` and renders numbers | Answer button plays audio in demo browser | `/coach` returns JSON from Postman | `/forecast` live; Arabic test clip played to an Arabic speaker |
-| 1:30–3:00 | Lovable prompt 2 (dashboard, chart, risk card, Try a fix) | Lovable prompt 4 (coach screen, mic recording) | `/coach` audio in: STT → Claude → TTS; signposts; escalate path | `/future-call` live path (prompts a + c, guards, TTS); write and approve EN + AR scripts |
+| 1:30–3:00 | Lovable prompt 2 (dashboard, chart, risk card, Try a fix) | Lovable prompt 4 (coach screen, mic recording) | `/coach` audio in: STT → Claude → TTS; signposts; escalate path | `/future-message` live path (prompts a + c, guards, TTS); write and approve EN + AR scripts |
 | **3:00 checkpoint** | Full flow on one laptop: language → dashboard → call (live) → coach (one spoken turn) → Try a fix redraw. Log every failure. | ← | ← | ← |
 | 3:00–4:30 | Merge branches; a11y pass with keyboard + VoiceOver/NVDA; Arabic RTL fixes | Polish call screen; alerts polling + F-F-F trigger; error/fallback states | Scheduled alert workflow; latency tuning; CORS edge cases | Generate ALL cached audio (§10); slides (5 max); demo script draft |
 | **4:30 FREEZE** | No new features. Only bugs, copy, cache, rehearsal. | ← | ← | ← |
@@ -655,7 +657,7 @@ One presenter (P4) talks; P1 drives the laptop; nobody else speaks. The Arabic c
 
 | Time | On screen | Presenter says (paraphrase, don't read) | Hits |
 | --- | --- | --- | --- |
-| 0:00–0:20 | Title slide: Amira's photo-free persona card | "Amira delivers food in Manchester. She came from Syria two years ago. Her income changes every week, and English is her second language. Budgeting apps show her where her money went. None of them warn her, in Arabic, about February." | C1, C3 |
+| 0:00–0:20 | Title slide: Adam's photo-free persona card | "Adam delivers food in Manchester. He came from Libya. His pay changes every week, and English is his second language. Budgeting apps show him where his money went. None of them warn him, in Arabic, about January." | C1, C3 |
 | 0:20–0:35 | Language picker; tap العربية; layout mirrors | "First thing she sees: choose your language, spoken aloud, in its own script. Everything mirrors right-to-left." | C1, C3 |
 | 0:35–1:00 | Dashboard, 90-day chart, red week | "Our forecast is plain code, not AI. It blends her last eight weeks with the same weeks last year. Last January was slow for riders, so it knows this one will be. Rent and her yearly scooter insurance land in the same quiet week: she'll be £140 short on 13 February." Tap "Why?" | C4, C5 |
 | 1:00–1:40 | Alert fires → incoming call → tap Answer → Arabic audio plays with English subtitles | "Three months early, Future You calls." Let 20–25 s of the Arabic audio play uninterrupted. Then: "It opens by saying it's AI and not advice. It's her own future self, in her language, telling her what would have helped." | C2, EL, C3 |
@@ -683,21 +685,21 @@ One presenter (P4) talks; P1 drives the laptop; nobody else speaks. The Arabic c
 
 By 4:30 every sound the judges will hear exists as an MP3 in `public/audio/`, and `DEMO_MODE=true` serves them with zero API calls. Live generation is a bonus we show only if the 5:30 rehearsal is clean.
 
-**Generate through n8n, not with keys on a laptop.** P4 runs `generate-cache.js` (attached in chat) with `N8N_BASE` set. It calls `/forecast`, `/future-call` and `/coach` with `demo_mode: false`, then writes the MP3s and matching mock JSON straight into the Lovable folder layout.
+**Generate through n8n, not with keys on a laptop.** P4 runs `generate-cache.js` (attached in chat) with `N8N_BASE` set. It calls `/forecast`, `/future-message` and `/coach` with `demo_mode: false`, then writes the MP3s and matching mock JSON straight into the Lovable folder layout.
 
 | File in `public/audio/` | Used by | Approved by |
 | --- | --- | --- |
-| `amira_ar_future_call.mp3` | The hero call | Arabic speaker, by 4:00 |
-| `amira_en_future_call.mp3` | English demo and backup | P4 |
-| `amira_ar_coach_1..3.mp3` | Arabic answers to the 3 chips | Arabic speaker |
-| `amira_en_coach_1..3.mp3` | English answers to the 3 chips | P4 |
+| `adam_ar_future_call.mp3` | The hero call | Arabic speaker, by 4:00 |
+| `adam_en_future_call.mp3` | English demo and backup | P4 |
+| `adam_ar_coach_1..3.mp3` | Arabic answers to the 3 chips | Arabic speaker |
+| `adam_en_coach_1..3.mp3` | English answers to the 3 chips | P4 |
 | `lang_en.mp3`, `lang_ar.mp3` | Spoken language picker | P1 |
 | `user_question_ar.mp3` | Recorded teammate asking "What can I do?" in Arabic, for a scripted coach turn if the mic fails | P4 |
 | `silence.mp3` | Audio unlock on Answer tap | P2 |
 
 **Approved English call script (55–75 words, numbers from the forecast):**
 
-> This is an AI-generated message, not financial advice. Hi Amira, it's you, from February. The ninth and tenth were hard. Rent and the scooter insurance came in the same quiet week. We ended up one hundred and forty pounds short. Two things would have helped. Paying the insurance monthly when it renewed. And putting twenty pounds aside in the busy weeks before Christmas. Citizens Advice can help for free. Open the app, and let's talk it through.
+> This is an AI-generated message, not financial advice. Hi Adam, it's you, from February. The ninth and tenth were hard. Rent and the scooter insurance came in the same quiet week. We ended up one hundred and forty pounds short. Two things would have helped. Paying the insurance monthly when it renewed. And putting twenty pounds aside in the busy weeks before Christmas. Citizens Advice can help for free. Open the app, and let's talk it through.
 
 **Draft Arabic call script (must be checked by a native speaker before recording):**
 

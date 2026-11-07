@@ -2,36 +2,29 @@
 
 ## Live now (Melanius)
 
-Three workflows are built, tested and published on `futureyou.app.n8n.cloud`. All take POST JSON, return JSON and allow CORS from any origin.
+All three endpoints use **Adam** (`data/adam.json`) and **Ammar's forecast** (`forecast/forecast.js`). Only `/forecast` contains the forecast code; `/coach` and `/future-message` call `/forecast` over HTTP, so there is one source of truth. All take POST JSON, return JSON, and allow CORS from any origin.
 
-| Endpoint | What it does | Tested |
-|---|---|---|
-| `https://futureyou.app.n8n.cloud/webhook/forecast` | 90-day forecast in a Code node (no AI) | £140 short, week of 8 Feb |
-| `https://futureyou.app.n8n.cloud/webhook/coach` | Code builds FACTS + priced options → Claude Haiku explains → guard rejects invented £ figures | Arabic reply 3.5 s; refuses payday loans |
-| `https://futureyou.app.n8n.cloud/webhook/future-call` | Claude Sonnet writes the Future You script → guard → Arabic translation → guard. `demo_mode: true` returns the cached script + MP3 path instantly | Live 5.4 s; demo 0.08 s |
+To find a URL yourself: open the workflow in n8n, double-click the first (Webhook) box, and copy the **Production URL** (`/webhook/...`, not `/webhook-test/...`). It only works while the workflow is published.
 
-Files in this folder:
+| Endpoint | Request | Response | Tested |
+|---|---|---|---|
+| `https://futureyou.app.n8n.cloud/webhook/forecast` | `{}` or `{ options: { billChanges } }` or `{ canIAfford: { date, amount, name } }` | output of `forecast()` / `canIAfford()` | £143 short in slow weeks from w/c 4 Jan; fix "Save £16 a week for 9 weeks" |
+| `https://futureyou.app.n8n.cloud/webhook/coach` | `{ messages: [{ role, content }], language, options? }` | `{ text, text_en, audio, plan, forecast_options, signposts, escalate, disclaimer }` | Arabic reply to Adam (masculine) in 4.4 s; refuses payday loans |
+| `https://futureyou.app.n8n.cloud/webhook/future-message` | `{ language, risk?, options?, demo_mode? }` | `{ text, text_en, audio, audio_url, risk, disclosure_text, dir, cached, guarded }` | Live Arabic in 7.5 s; `demo_mode: true` returns the approved cached script instantly |
+
+How the AI is kept honest (say this to judges): code computes the forecast and prices each option (`Save £16 a week…` covers the £143 gap; paying the car insurance monthly at about £62 clears it). Claude only explains those numbers. A guard node rejects any reply containing a £ figure that isn't in the forecast, and a second guard checks the Arabic translation kept every amount. Any failure falls back to the approved script in `prompts/cached-scripts.md`.
+
+`forecast_options` in a coach reply can be posted straight back to `/forecast` to redraw the chart with the suggested change.
+
+**Voice hand-off (Ibrahim):** in `/future-message`, add the ElevenLabs step between **Final message (voice goes after this)** and **Respond live**: read `text` and `language`, write base64 MP3 to `audio`. In `/coach`, add the same step after **Guard reply**. Until then `audio` is `null` and the app shows the text.
+
+Files here:
 
 ```
-workflows/   importable exports of the three live workflows (re-select the Anthropic credential after import)
-prompts/     the coach, script-writer and translation prompts with their guardrails
-reference/   forecast + persona the workflows currently embed, and generate-cache.js for demo audio
+workflows/   importable exports of forecast.json, coach.json, future-message.json (re-select the Anthropic credential after import)
+prompts/     coach, script-writer and translation prompts, plus the approved cached scripts
+tools/       generate-cache.js: calls the live endpoints and saves demo MP3s + mock JSON for the frontend
 ```
-
-Voice hand-off (Ibrahim): in `/future-call`, add the ElevenLabs step between **Final script (voice goes after this)** and **Respond live**, reading `script_text` and `language`, writing `audio_base64`. `/coach` returns `audio_base64: null` until the same step is added after **Guard reply**.
-
-### Not yet aligned with the contract below
-
-These were built from the earlier build plan (`docs/build-plan.md`) before this README's contract was agreed, so they differ:
-
-| | This README's contract | What is live |
-|---|---|---|
-| Persona | Adam, `data/adam.json` | Amira (embedded, `reference/persona-amira.json`) |
-| Forecast | `forecast/forecast.js` (Ammar) | its own version (`reference/forecast-amira.js`) |
-| Message endpoint | `/future-message` → `{ text, audio }` | `/future-call` → `{ script_text, subtitle_en, audio_base64, ... }` |
-| Coach input/output | `{ messages, language, forecast }` → `{ text, audio }` | `{ persona_id, language, input, history }` → `{ reply_text, reply_en, plan, signposts, ... }` |
-
-Next step: swap the embedded persona and forecast for `data/adam.json` + Ammar's `forecast/forecast.js` (his `n8n/forecast-code-node.js` on `ammar-forecast`), and add `/future-message` and `text`/`audio` fields so the frontend gets the agreed shapes. The guards, prompts and demo-mode path carry over unchanged.
 
 ---
 
