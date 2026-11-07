@@ -1,0 +1,490 @@
+{
+  "persona": {
+    "id": "yusuf",
+    "name": "Yusuf",
+    "age": 27,
+    "city": "Manchester",
+    "job": "Delivery rider (Deliveroo), paid weekly",
+    "language": "ar",
+    "homeCountry": "Libya",
+    "homeCurrency": "LYD",
+    "gbpToHome": 6.9,
+    "startBalance": 0,
+    "historyStart": "2026-08-03",
+    "today": "2026-11-07"
+  },
+  "knownBills": [
+    {
+      "name": "Rent",
+      "amount": 600,
+      "dayOfMonth": 1
+    },
+    {
+      "name": "Phone",
+      "amount": 15,
+      "dayOfMonth": 8
+    },
+    {
+      "name": "Money sent home",
+      "amount": 100,
+      "dayOfMonth": 15
+    },
+    {
+      "name": "Car insurance (annual)",
+      "amount": 690,
+      "date": "2027-01-04"
+    }
+  ],
+  "transactions": [
+    {
+      "date": "2026-08-03",
+      "amount": 312,
+      "type": "income",
+      "category": "Deliveroo pay"
+    },
+    {
+      "date": "2026-08-03",
+      "amount": -20,
+      "type": "spend",
+      "category": "Transport"
+    },
+    {
+      "date": "2026-08-05",
+      "amount": -25.89,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-08-07",
+      "amount": -13.21,
+      "type": "spend",
+      "category": "Eating out"
+    },
+    {
+      "date": "2026-08-08",
+      "amount": -15,
+      "type": "bill",
+      "category": "Phone"
+    },
+    {
+      "date": "2026-08-08",
+      "amount": -22.87,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-08-10",
+      "amount": 268,
+      "type": "income",
+      "category": "Deliveroo pay"
+    },
+    {
+      "date": "2026-08-10",
+      "amount": -20,
+      "type": "spend",
+      "category": "Transport"
+    },
+    {
+      "date": "2026-08-12",
+      "amount": -28.43,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-08-14",
+      "amount": -8.46,
+      "type": "spend",
+      "category": "Eating out"
+    },
+    {
+      "date": "2026-08-15",
+      "amount": -100,
+      "type": "transfer",
+      "category": "Money sent home"
+    },
+    {
+      "date": "2026-08-15",
+      "amount": -28.09,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-08-17",
+      "amount": 405,
+      "type": "income",
+      "category": "Deliveroo pay"
+    },
+    {
+      "date": "2026-08-17",
+      "amount": -20,
+      "type": "spend",
+      "category": "Transport"
+    },
+    {
+      "date": "2026-08-19",
+      "amount": -22.45,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-08-21",
+      "amount": -8.56,
+      "type": "spend",
+      "category": "Eating out"
+    },
+    {
+      "date": "2026-08-22",
+      "amount": -23.09,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-08-24",
+      "amount": 251,
+      "type": "income",
+      "category": "Deliveroo pay"
+    },
+    {
+      "date": "2026-08-24",
+      "amount": -20,
+      "type": "spend",
+      "category": "Transport"
+    },
+    {
+      "date": "2026-08-26",
+      "amount": -27.09,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-08-29",
+      "amount": -23.49,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-08-31",
+      "amount": 355,
+      "type": "income",
+      "category": "Deliveroo pay"
+    },
+    {
+      "date": "2026-08-31",
+      "amount": -20,
+      "type": "spend",
+      "category": "Transport"
+    },
+    {
+      "date": "2026-09-01",
+      "amount": -600,
+      "type": "bill",
+      "category": "Rent"
+    },
+    {
+      "date": "2026-09-02",
+      "amount": -24.68,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-09-05",
+      "amount": -33.37,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-09-07",
+      "amount": 240,
+      "type": "income",
+      "category": "Deliveroo pay"
+    },
+    {
+      "date": "2026-09-07",
+      "amount": -20,
+      "type": "spend",
+      "category": "Transport"
+    },
+    {
+      "date": "2026-09-08",
+      "amount": -15,
+      "type": "bill",
+      "category": "Phone"
+    },
+    {
+      "date": "2026-09-09",
+      "amount": -28.93,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-09-11",
+      "amount": -15.81,
+      "type": "spend",
+      "category": "Eating out"
+    },
+    {
+      "date": "2026-09-12",
+      "amount": -22.56,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-09-14",
+      "amount": 298,
+      "type": "income",
+      "category": "Deliveroo pay"
+    },
+    {
+      "date": "2026-09-14",
+      "amount": -20,
+      "type": "spend",
+      "category": "Transport"
+    },
+    {
+      "date": "2026-09-15",
+      "amount": -100,
+      "type": "transfer",
+      "category": "Money sent home"
+    },
+    {
+      "date": "2026-09-16",
+      "amount": -32.3,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-09-18",
+      "amount": -9.15,
+      "type": "spend",
+      "category": "Eating out"
+    },
+    {
+      "date": "2026-09-19",
+      "amount": -23.41,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-09-21",
+      "amount": 244,
+      "type": "income",
+      "category": "Deliveroo pay"
+    },
+    {
+      "date": "2026-09-21",
+      "amount": -20,
+      "type": "spend",
+      "category": "Transport"
+    },
+    {
+      "date": "2026-09-23",
+      "amount": -25.7,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-09-26",
+      "amount": -24.17,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-09-28",
+      "amount": 420,
+      "type": "income",
+      "category": "Deliveroo pay"
+    },
+    {
+      "date": "2026-09-28",
+      "amount": -20,
+      "type": "spend",
+      "category": "Transport"
+    },
+    {
+      "date": "2026-09-30",
+      "amount": -28.98,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-10-01",
+      "amount": -600,
+      "type": "bill",
+      "category": "Rent"
+    },
+    {
+      "date": "2026-10-03",
+      "amount": -26.47,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-10-05",
+      "amount": 276,
+      "type": "income",
+      "category": "Deliveroo pay"
+    },
+    {
+      "date": "2026-10-05",
+      "amount": -20,
+      "type": "spend",
+      "category": "Transport"
+    },
+    {
+      "date": "2026-10-07",
+      "amount": -28.57,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-10-08",
+      "amount": -15,
+      "type": "bill",
+      "category": "Phone"
+    },
+    {
+      "date": "2026-10-09",
+      "amount": -8.48,
+      "type": "spend",
+      "category": "Eating out"
+    },
+    {
+      "date": "2026-10-10",
+      "amount": -24.47,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-10-12",
+      "amount": 230,
+      "type": "income",
+      "category": "Deliveroo pay"
+    },
+    {
+      "date": "2026-10-12",
+      "amount": -20,
+      "type": "spend",
+      "category": "Transport"
+    },
+    {
+      "date": "2026-10-14",
+      "amount": -30.16,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-10-15",
+      "amount": -100,
+      "type": "transfer",
+      "category": "Money sent home"
+    },
+    {
+      "date": "2026-10-16",
+      "amount": -10.51,
+      "type": "spend",
+      "category": "Eating out"
+    },
+    {
+      "date": "2026-10-17",
+      "amount": -29.03,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-10-19",
+      "amount": 331,
+      "type": "income",
+      "category": "Deliveroo pay"
+    },
+    {
+      "date": "2026-10-19",
+      "amount": -20,
+      "type": "spend",
+      "category": "Transport"
+    },
+    {
+      "date": "2026-10-20",
+      "amount": -330,
+      "type": "one-off",
+      "category": "E-bike repair"
+    },
+    {
+      "date": "2026-10-21",
+      "amount": -27.44,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-10-23",
+      "amount": -14.36,
+      "type": "spend",
+      "category": "Eating out"
+    },
+    {
+      "date": "2026-10-24",
+      "amount": -30.39,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-10-26",
+      "amount": 238,
+      "type": "income",
+      "category": "Deliveroo pay"
+    },
+    {
+      "date": "2026-10-26",
+      "amount": -20,
+      "type": "spend",
+      "category": "Transport"
+    },
+    {
+      "date": "2026-10-28",
+      "amount": -24.93,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-10-30",
+      "amount": -12.2,
+      "type": "spend",
+      "category": "Eating out"
+    },
+    {
+      "date": "2026-10-31",
+      "amount": -32.5,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-11-01",
+      "amount": -600,
+      "type": "bill",
+      "category": "Rent"
+    },
+    {
+      "date": "2026-11-02",
+      "amount": 288,
+      "type": "income",
+      "category": "Deliveroo pay"
+    },
+    {
+      "date": "2026-11-02",
+      "amount": -20,
+      "type": "spend",
+      "category": "Transport"
+    },
+    {
+      "date": "2026-11-04",
+      "amount": -30.75,
+      "type": "spend",
+      "category": "Groceries"
+    },
+    {
+      "date": "2026-11-06",
+      "amount": -15.84,
+      "type": "spend",
+      "category": "Eating out"
+    }
+  ]
+}
