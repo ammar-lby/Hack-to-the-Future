@@ -18,8 +18,8 @@ const AI_WARNING: Partial<Record<string, string>> & { en: string } = {
 };
 
 const SUGGESTIONS: Partial<Record<string, string[]>> = {
-  en: ["Why will January be hard?", "Can I send £150 home this month?", "What if I pay my car insurance monthly?"],
-  ar: ["لماذا سيكون شهر يناير صعبًا؟", "هل أستطيع إرسال ١٥٠ جنيهًا لأهلي هذا الشهر؟", "ماذا لو دفعت تأمين السيارة شهريًا؟"],
+  en: ["Why will January be hard?", "How can I avoid being short?", "What if I pay my car insurance monthly?"],
+  ar: ["لماذا سيكون شهر يناير صعبًا؟", "كيف أتجنب العجز؟", "ماذا لو دفعت تأمين السيارة شهريًا؟"],
 };
 
 export function CoachChat() {
