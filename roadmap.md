@@ -17,3 +17,4 @@
 - [x] Add saved seven-day demo simulation, updated forecast views, Home badge and reset.
 - [x] Remove the demo simulation: controls, helper, Home badge and change banner.
 - [x] Compact the Future You card and audit English/Arabic phone layouts, accessibility and screen states.
+- [x] Push the simulation removal, card compaction and accessibility work to Hack-to-the-Future main.
