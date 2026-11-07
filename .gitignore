@@ -3,3 +3,8 @@
 node_modules/
 .DS_Store
 *.log
+
+# build output
+.output/
+.wrangler/
+dist/
