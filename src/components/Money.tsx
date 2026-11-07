@@ -7,7 +7,10 @@ import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-const gbp = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2, minimumFractionDigits: 0 });
+const gbp0 = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 });
+const gbp2 = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// Whole pounds stay whole (£600); anything with pence always shows two digits (£1,056.60).
+const gbp = { format: (n: number) => (Number.isInteger(Math.round(n * 100) / 100) ? gbp0 : gbp2).format(n) };
 const whole = new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 });
 const formatHome = (amount: number, code: string) => `≈ ${code} ${whole.format(amount)}`;
 
