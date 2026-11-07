@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 const AI_WARNING: Partial<Record<string, string>> & { en: string } = {
   en: "You are talking to an AI, not a person. It can make mistakes and is not regulated financial advice. It will never ask for your bank details. For free, expert help, contact Citizens Advice or StepChange. If you are struggling, call Samaritans on 116 123.",
-  ar: "أنت تتحدث مع ذكاء اصطناعي، وليس مع شخص. قد يخطئ، وما يقدّمه ليس نصيحة مالية مرخّصة. لن يطلب منك أبدًا بيانات حسابك البنكي. للحصول على مساعدة مجانية من خبراء، تواصل مع Citizens Advice أو StepChange. إذا كنت تمر بوقت صعب، اتصل بـ Samaritans على الرقم 116 123.",
+  ar: "أنت تتحدث مع ذكاء اصطناعي، وليس مع شخص. قد يخطئ، وما يقدّمه ليس نصيحة مالية مرخّصة. لن يطلب منك أبدًا بيانات حسابك البنكي. للحصول على مساعدة مجانية من خبراء، تواصل مع Citizens Advice أو StepChange. إذا كنت تمر بوقت صعب، اتصل بـ Samaritans على الرقم ⁦116 123⁩.",
 };
 
 const SUGGESTIONS: Partial<Record<string, string[]>> = {
