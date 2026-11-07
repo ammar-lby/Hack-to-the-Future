@@ -4,6 +4,7 @@ import { Loader2, Pause, Play, RefreshCw } from "lucide-react";
 import placeholderAudio from "@/assets/future-message-placeholder.mp3";
 import { Money } from "@/components/Money";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n";
 import { loadProfile } from "@/lib/profile";
 import { buildOutlook, type OutlookData } from "@/lib/outlook-data";
@@ -12,12 +13,14 @@ import { cachedFutureMessage, liveFutureScript } from "@/lib/cached-future-messa
 import { pauseAudio, playAudio, speak, stopSpeaking, useSpeakState } from "@/lib/speak";
 
 const AUDIO_ID = "future-message";
+const T = { show: { en: "Show transcript", ar: "عرض النص" }, hide: { en: "Hide transcript", ar: "إخفاء النص" } };
 export function FutureMessage() {
   const { t, lang } = useLanguage();
   const [data, setData] = useState<OutlookData | null>(null);
   const [message, setMessage] = useState<{ text: string; src: string | null } | null>(null);
   const [status, setStatus] = useState<"preparing" | "ready" | "fallback">("preparing");
   const [attempt, setAttempt] = useState(0);
+  const [expanded, setExpanded] = useState(false);
   const [saved, setSaved] = useState({ setAside: false, insuranceReminder: false });
   const [error, setError] = useState<"futureAudioError" | "futureSaveError" | null>(null);
   const audio = useSpeakState();
@@ -65,7 +68,8 @@ export function FutureMessage() {
     </div>
     {status === "preparing" ? <p role="status" className="mt-4 text-lg">{t("futurePreparing")}</p> : <>
       {status === "fallback" && <div className="mt-4 space-y-2"><p role="status" className="text-lg text-muted-foreground">{t("futureError")}</p><Button variant="outline" onClick={() => setAttempt(value => value + 1)} className="min-h-12 text-lg"><RefreshCw aria-hidden />{t("retry")}</Button><p className="text-base text-muted-foreground">{t("futurePlaceholder")}</p></div>}
-      <p dir="auto" className="mt-4 text-lg leading-relaxed">{message ? message.text : fallbackParts.map((part, i) => <Fragment key={i}>{part === "{week}" ? date : part === "{reason}" ? reason : part === "{shortfall}" ? <Money amount={risk.shortfall} /> : part === "{fix}" ? <>{t("outlookSave")} <Money amount={risk.saveWeekly} /> {t("outlookWeeklyFor")} {risk.weeksUntil} {t("outlookWeeks")}</> : part}</Fragment>)}</p>
+      <p dir="auto" className={cn("mt-4 text-lg leading-relaxed", message && !expanded && "line-clamp-3")}>{message ? message.text : fallbackParts.map((part, i) => <Fragment key={i}>{part === "{week}" ? date : part === "{reason}" ? reason : part === "{shortfall}" ? <Money amount={risk.shortfall} /> : part === "{fix}" ? <>{t("outlookSave")} <Money amount={risk.saveWeekly} /> {t("outlookWeeklyFor")} {risk.weeksUntil} {t("outlookWeeks")}</> : part}</Fragment>)}</p>
+      {message && <button type="button" onClick={() => setExpanded(v => !v)} aria-expanded={expanded} className="mt-1 min-h-10 rounded-md text-base font-bold text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring">{(expanded ? T.hide : T.show)[lang === "ar" ? "ar" : "en"]}</button>}
     </>}
     {error && <p role="alert" className="mt-3 text-lg text-destructive">{t(error)}</p>}
     <div className="mt-4 flex flex-col gap-2">

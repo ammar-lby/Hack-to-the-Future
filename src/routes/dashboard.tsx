@@ -8,6 +8,9 @@ import { Money, MoneyModeToggle } from "@/components/Money";
 import { SpeakButton } from "@/components/SpeakButton";
 import { Outlook } from "@/components/Outlook";
 import { FutureMessage } from "@/components/FutureMessage";
+import { EmergencyPot } from "@/components/EmergencyPot";
+import { buildOutlook } from "@/lib/outlook-data";
+import { displayName } from "@/lib/l10n";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
 import { loadProfile } from "@/lib/profile";
@@ -46,7 +49,7 @@ function Dashboard() {
       <AppHeader />
       <div className="lg:ps-60">
       <div className="mx-auto flex max-w-xl flex-col gap-6 px-4 pb-28 pt-6 lg:grid lg:max-w-6xl lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start lg:gap-8 lg:px-8 lg:pb-12 lg:pt-10">
-        <aside id="future-you-message" className="lg:col-start-2 lg:row-start-1"><FutureMessage /></aside>
+        <aside id="future-you-message" className="space-y-6 lg:col-start-2 lg:row-start-1"><FutureMessage /><PotSlot /></aside>
         <div className="min-w-0 space-y-6 lg:col-start-1 lg:row-start-1">
         <MoneyModeToggle />
         {failed ? <div role="alert"><p>{t("errorBody")}</p><Button className="mt-3 min-h-12 text-lg" onClick={() => setAttempt(value => value + 1)}>{t("retry")}</Button></div> : data === undefined && <p role="status">{t("dashboardLoading")}</p>}
@@ -64,14 +67,20 @@ function Dashboard() {
   );
 }
 
+function PotSlot() {
+  const [data, setData] = useState<ReturnType<typeof buildOutlook> | null>(null);
+  useEffect(() => { try { setData(buildOutlook(loadProfile())); } catch { /* no data */ } }, []);
+  return data ? <div className="hidden lg:block"><EmergencyPot data={data} /></div> : null;
+}
+
 function DashboardBody({ data }: { data: DashboardData }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const total = data.spending || 1;
   const slices = data.categories.filter((c) => c.amount > 0);
   const say = (n: number) => `${Math.round(n * 100) / 100} ${t("poundsWord")}`;
   const fill = (k: Parameters<typeof t>[0], v: Record<string, string>) => Object.entries(v).reduce((a, [x, y]) => a.replace(`{${x}}`, y), t(k));
   return <>
-    <h1 className="break-words text-3xl font-bold text-secondary">{t("greeting")}, <bdi>{data.name}</bdi></h1>
+    <h1 className="break-words text-3xl font-bold text-secondary">{t("greeting")}, <bdi>{displayName(lang, data.name)}</bdi></h1>
     <section className="brand-hero rounded-3xl p-6 text-secondary-foreground shadow-lg">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3"><h2 className="text-lg font-bold opacity-90">{t("currentBalance")}</h2><SpeakButton id="balance" label={t("currentBalance")} text={fill("sayBalance", { amount: say(data.balance) })} inverted /></div>
       <p className="mt-1 text-4xl font-bold"><Money amount={data.balance} /></p>

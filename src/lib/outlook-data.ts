@@ -6,9 +6,12 @@ import type { SavedProfile } from "@/lib/profile";
 export type OutlookData = ReturnType<typeof forecast>;
 
 /** Never fabricate transaction history. Personal profiles without history show a labelled Adam preview. */
-export function buildOutlook(saved: SavedProfile | null) {
+export function outlookInput(saved: SavedProfile | null): ForecastInput {
   const source: ForecastInput = saved?.source === "adam" ? saved.data : adam;
-  return forecast({ ...source, persona: { ...source.persona, today: DEMO_TODAY } });
+  return { ...source, persona: { ...source.persona, today: DEMO_TODAY } };
+}
+export function buildOutlook(saved: SavedProfile | null) {
+  return forecast(outlookInput(saved));
 }
 
 export function weekOf(iso: string) {

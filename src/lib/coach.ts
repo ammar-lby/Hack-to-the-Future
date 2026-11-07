@@ -2,7 +2,7 @@ import { COACH_WEBHOOK_URL } from "@/config";
 import type { Lang } from "@/i18n/translations";
 import type { OutlookData } from "@/lib/outlook-data";
 
-export type ChatMessage = { role: "user" | "assistant"; content: string; audio?: string };
+export type ChatMessage = { role: "user" | "assistant"; content: string; audio?: string; subtitle?: string };
 export const recognitionLocales: Record<Lang, string> = { en: "en-GB", ar: "ar-SA", hi: "hi-IN", bn: "bn-BD", ur: "ur-PK" };
 export function coachPayload(messages: ChatMessage[], language: Lang, forecast: OutlookData) {
   return { messages: messages.map(({ role, content }) => ({ role, content })), language, forecast };
@@ -14,7 +14,8 @@ export async function requestCoach(messages: ChatMessage[], language: Lang, fore
   const result: unknown = await response.json();
   if (!result || typeof result !== "object" || !("text" in result) || typeof result.text !== "string" || !result.text.trim()) throw new Error("Missing reply");
   const audio = "audio" in result && typeof result.audio === "string" ? result.audio : "";
-  return { role: "assistant" as const, content: result.text, audio };
+  const english = "text_en" in result && typeof result.text_en === "string" ? result.text_en.trim() : "";
+  return { role: "assistant" as const, content: result.text, audio, subtitle: english && english !== result.text.trim() ? english : "" };
 }
 
 export function helpTextParts(text: string) {

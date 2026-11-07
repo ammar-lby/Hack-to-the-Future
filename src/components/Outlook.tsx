@@ -4,6 +4,9 @@ import { AlertTriangle, ArrowUpRight, CalendarDays, CheckCircle2 } from "lucide-
 import { CartesianGrid, Line, LineChart, ReferenceArea, ReferenceDot, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { Money } from "@/components/Money";
 import { SpeakButton } from "@/components/SpeakButton";
+import { RiskWhy } from "@/components/RiskWhy";
+import { AffordCheck } from "@/components/AffordCheck";
+import { EmergencyPot } from "@/components/EmergencyPot";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useLanguage, dirFor, type StringKey } from "@/lib/i18n";
@@ -92,6 +95,9 @@ export function Outlook({ compact = false }: { compact?: boolean }) {
         <p className="text-lg"><span className="font-bold">{t("outlookFix")}: </span>{t("outlookSave")} <Money amount={risk.saveWeekly} className="font-bold" /> {t("outlookWeeklyFor")} {risk.weeksUntil} {t("outlookWeeks")}.</p>
       </> : <p className="flex items-start gap-2 text-lg"><CheckCircle2 className="mt-1 size-6 shrink-0 text-primary" aria-hidden />{t("outlookNoRisk")}</p>}
     </div>
+    {risk && <RiskWhy data={data} />}
+    {compact && <div className="lg:hidden"><EmergencyPot data={data} /></div>}
+    {!compact && <div className="grid gap-6 xl:grid-cols-2 xl:items-start"><AffordCheck /><EmergencyPot data={data} /></div>}
     {compact && <Button asChild variant="outline" className="min-h-14 w-full text-lg"><Link to="/outlook">{t("outlookOpen")}<ArrowUpRight aria-hidden className="rtl:-rotate-90" /></Link></Button>}
   </section>;
 }

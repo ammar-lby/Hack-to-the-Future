@@ -1,6 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { useLanguage } from "@/lib/i18n";
 import { languageOptions, type Lang } from "@/i18n/translations";
+import { DEMO_TODAY } from "@/config";
+import { useEffect, useState } from "react";
+import { loadProfile } from "@/lib/profile";
+import { displayName } from "@/lib/l10n";
 
 /** Original Future You mark: a rising line inside a rounded square. */
 function LogoMark() {
@@ -15,6 +19,9 @@ function LogoMark() {
 
 export function AppHeader() {
   const { lang, setLang, t } = useLanguage();
+  const [name, setName] = useState("");
+  useEffect(() => { try { const p = loadProfile(); setName(p?.source === "personal" ? p.profile.firstName : p?.data.persona.name ?? ""); } catch { /* none */ } }, []);
+  const initial = displayName(lang, name).trim().charAt(0).toUpperCase();
   return (
     <header className="brand-bar sticky top-0 z-10 text-white shadow-md">
       <div className="mx-auto grid max-w-xl lg:max-w-none lg:px-6 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3">
@@ -25,6 +32,8 @@ export function AppHeader() {
             <span className="block truncate text-xs font-bold uppercase tracking-wider text-white/75" dir="ltr">NatWest challenge</span>
           </span>
         </Link>
+        <div className="flex items-center gap-3">
+        <span className="hidden text-base font-bold text-white/80 md:inline" dir="auto">{new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${DEMO_TODAY}T00:00:00Z`))}</span>
         <select
           aria-label={t("language")}
           value={lang}
@@ -35,6 +44,8 @@ export function AppHeader() {
             <option key={option.value} value={option.value} lang={option.value}>{t(option.labelKey)}</option>
           ))}
         </select>
+        {initial && <span aria-hidden className="hidden size-11 items-center justify-center rounded-full bg-white text-lg font-bold text-secondary sm:flex">{initial}</span>}
+        </div>
       </div>
     </header>
   );

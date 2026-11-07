@@ -19,7 +19,11 @@ describe("Coach contract", () => {
   it("reads returned reply text and audio", async () => {
     const mock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ text: "Your reply", audio: "bXAz" })));
     vi.stubGlobal("fetch", mock);
-    expect(await requestCoach([{ role: "user", content: "Help" }], "en", buildOutlook(null), new AbortController().signal)).toEqual({ role: "assistant", content: "Your reply", audio: "bXAz" });
+    expect(await requestCoach([{ role: "user", content: "Help" }], "en", buildOutlook(null), new AbortController().signal)).toEqual({ role: "assistant", content: "Your reply", audio: "bXAz", subtitle: "" });
     expect(mock.mock.calls[0]?.[0]).toBe("https://example.test/webhook/coach");
+  });
+  it("keeps the English subtitle for replies in another language", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ text: "مرحبا", text_en: "Hello", audio: "" }))));
+    expect((await requestCoach([{ role: "user", content: "Help" }], "ar", buildOutlook(null), new AbortController().signal)).subtitle).toBe("Hello");
   });
 });
