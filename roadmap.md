@@ -1,0 +1,6 @@
+- [x] Update language options, translations and script fonts.
+- [x] Add saved home currency selection between welcome and setup.
+- [x] Verify language, currency, persistence and mobile layouts.
+- [x] Build seven setup steps with progress, validation, and saved drafts.
+- [x] Connect the existing Adam demo and saved profile to the dashboard.
+- [x] Test full setup, demo shortcut, persistence, and Arabic layouts.
