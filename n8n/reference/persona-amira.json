@@ -1,0 +1,156 @@
+{
+  "persona_id": "amira",
+  "display_name": "Amira",
+  "language": "ar",
+  "as_of": "2026-11-16",
+  "currency": "GBP",
+  "opening_balance": 144,
+  "income": {
+    "type": "irregular_weekly",
+    "source_label": "Delivery platform payouts (paid Mondays)",
+    "history_weekly": [
+      430,
+      455,
+      470,
+      510,
+      520,
+      380,
+      300,
+      290,
+      310,
+      305,
+      315,
+      300,
+      285,
+      330,
+      350,
+      360,
+      370,
+      385,
+      390,
+      400,
+      395,
+      410,
+      420,
+      405,
+      390,
+      400,
+      380,
+      395,
+      410,
+      400,
+      390,
+      385,
+      405,
+      415,
+      400,
+      395,
+      390,
+      400,
+      410,
+      405,
+      395,
+      400,
+      410,
+      420,
+      415,
+      425,
+      430,
+      420,
+      435,
+      440,
+      425,
+      445
+    ],
+    "history_note": "52 weeks, oldest first. Index 0 = week starting 2025-11-17. Last January dipped ~30% after Christmas."
+  },
+  "everyday_spend_weekly": 190,
+  "recurring": [
+    {
+      "id": "rent",
+      "label": "Rent",
+      "amount": 650,
+      "cadence": "monthly",
+      "day": 9
+    },
+    {
+      "id": "remit",
+      "label": "Money sent to family",
+      "amount": 150,
+      "cadence": "monthly",
+      "day": 1
+    },
+    {
+      "id": "phone",
+      "label": "Phone",
+      "amount": 15,
+      "cadence": "monthly",
+      "day": 20
+    },
+    {
+      "id": "council",
+      "label": "Council tax",
+      "amount": 95,
+      "cadence": "monthly",
+      "day": 1,
+      "months": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        1
+      ]
+    },
+    {
+      "id": "insurance",
+      "label": "Scooter insurance (yearly)",
+      "amount": 420,
+      "cadence": "yearly",
+      "month": 2,
+      "day": 10
+    }
+  ],
+  "recent_transactions": [
+    {
+      "date": "2026-11-09",
+      "description": "Platform payout",
+      "amount": 445,
+      "category": "income"
+    },
+    {
+      "date": "2026-11-09",
+      "description": "Rent",
+      "amount": -650,
+      "category": "housing"
+    },
+    {
+      "date": "2026-11-11",
+      "description": "Lidl",
+      "amount": -42,
+      "category": "groceries"
+    },
+    {
+      "date": "2026-11-12",
+      "description": "Fuel",
+      "amount": -25,
+      "category": "transport"
+    },
+    {
+      "date": "2026-11-13",
+      "description": "Halal butcher",
+      "amount": -31,
+      "category": "groceries"
+    },
+    {
+      "date": "2026-11-14",
+      "description": "Bus pass top-up",
+      "amount": -20,
+      "category": "transport"
+    }
+  ]
+}

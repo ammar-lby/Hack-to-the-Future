@@ -1,5 +1,40 @@
 # n8n workflows
 
+## Live now (Melanius)
+
+Three workflows are built, tested and published on `futureyou.app.n8n.cloud`. All take POST JSON, return JSON and allow CORS from any origin.
+
+| Endpoint | What it does | Tested |
+|---|---|---|
+| `https://futureyou.app.n8n.cloud/webhook/forecast` | 90-day forecast in a Code node (no AI) | £140 short, week of 8 Feb |
+| `https://futureyou.app.n8n.cloud/webhook/coach` | Code builds FACTS + priced options → Claude Haiku explains → guard rejects invented £ figures | Arabic reply 3.5 s; refuses payday loans |
+| `https://futureyou.app.n8n.cloud/webhook/future-call` | Claude Sonnet writes the Future You script → guard → Arabic translation → guard. `demo_mode: true` returns the cached script + MP3 path instantly | Live 5.4 s; demo 0.08 s |
+
+Files in this folder:
+
+```
+workflows/   importable exports of the three live workflows (re-select the Anthropic credential after import)
+prompts/     the coach, script-writer and translation prompts with their guardrails
+reference/   forecast + persona the workflows currently embed, and generate-cache.js for demo audio
+```
+
+Voice hand-off (Ibrahim): in `/future-call`, add the ElevenLabs step between **Final script (voice goes after this)** and **Respond live**, reading `script_text` and `language`, writing `audio_base64`. `/coach` returns `audio_base64: null` until the same step is added after **Guard reply**.
+
+### Not yet aligned with the contract below
+
+These were built from the earlier build plan (`docs/build-plan.md`) before this README's contract was agreed, so they differ:
+
+| | This README's contract | What is live |
+|---|---|---|
+| Persona | Adam, `data/adam.json` | Amira (embedded, `reference/persona-amira.json`) |
+| Forecast | `forecast/forecast.js` (Ammar) | its own version (`reference/forecast-amira.js`) |
+| Message endpoint | `/future-message` → `{ text, audio }` | `/future-call` → `{ script_text, subtitle_en, audio_base64, ... }` |
+| Coach input/output | `{ messages, language, forecast }` → `{ text, audio }` | `{ persona_id, language, input, history }` → `{ reply_text, reply_en, plan, signposts, ... }` |
+
+Next step: swap the embedded persona and forecast for `data/adam.json` + Ammar's `forecast/forecast.js` (his `n8n/forecast-code-node.js` on `ammar-forecast`), and add `/future-message` and `text`/`audio` fields so the frontend gets the agreed shapes. The guards, prompts and demo-mode path carry over unchanged.
+
+---
+
 One shared n8n Cloud account (Melanius owns it and invites everyone). API keys are stored once as **credentials** and never go in code or chat.
 
 | Workflow | Owner | Input (POST JSON) | Output |

@@ -1,0 +1,160 @@
+{
+  "name": "Future You - /coach",
+  "nodes": [
+    {
+      "name": "POST /coach",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "coach",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "coach",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      }
+    },
+    {
+      "name": "Build FACTS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const PERSONAS = { amira: {\"persona_id\":\"amira\",\"display_name\":\"Amira\",\"language\":\"ar\",\"as_of\":\"2026-11-16\",\"currency\":\"GBP\",\"opening_balance\":144,\"income\":{\"type\":\"irregular_weekly\",\"source_label\":\"Delivery platform payouts (paid Mondays)\",\"history_weekly\":[430,455,470,510,520,380,300,290,310,305,315,300,285,330,350,360,370,385,390,400,395,410,420,405,390,400,380,395,410,400,390,385,405,415,400,395,390,400,410,405,395,400,410,420,415,425,430,420,435,440,425,445],\"history_note\":\"52 weeks, oldest first. Index 0 = week starting 2025-11-17. Last January dipped ~30% after Christmas.\"},\"everyday_spend_weekly\":190,\"recurring\":[{\"id\":\"rent\",\"label\":\"Rent\",\"amount\":650,\"cadence\":\"monthly\",\"day\":9},{\"id\":\"remit\",\"label\":\"Money sent to family\",\"amount\":150,\"cadence\":\"monthly\",\"day\":1},{\"id\":\"phone\",\"label\":\"Phone\",\"amount\":15,\"cadence\":\"monthly\",\"day\":20},{\"id\":\"council\",\"label\":\"Council tax\",\"amount\":95,\"cadence\":\"monthly\",\"day\":1,\"months\":[4,5,6,7,8,9,10,11,12,1]},{\"id\":\"insurance\",\"label\":\"Scooter insurance (yearly)\",\"amount\":420,\"cadence\":\"yearly\",\"month\":2,\"day\":10}],\"recent_transactions\":[{\"date\":\"2026-11-09\",\"description\":\"Platform payout\",\"amount\":445,\"category\":\"income\"},{\"date\":\"2026-11-09\",\"description\":\"Rent\",\"amount\":-650,\"category\":\"housing\"},{\"date\":\"2026-11-11\",\"description\":\"Lidl\",\"amount\":-42,\"category\":\"groceries\"},{\"date\":\"2026-11-12\",\"description\":\"Fuel\",\"amount\":-25,\"category\":\"transport\"},{\"date\":\"2026-11-13\",\"description\":\"Halal butcher\",\"amount\":-31,\"category\":\"groceries\"},{\"date\":\"2026-11-14\",\"description\":\"Bus pass top-up\",\"amount\":-20,\"category\":\"transport\"}]} };\nconst SIGNPOSTS = {\n  stepchange: { name: 'StepChange', url: 'https://www.stepchange.org', why: 'Free debt advice' },\n  citizens_advice: { name: 'Citizens Advice', url: 'https://www.citizensadvice.org.uk', why: 'Free help with bills, benefits and rent' },\n  moneyhelper: { name: 'MoneyHelper', url: 'https://www.moneyhelper.org.uk', why: 'Free, government-backed money guidance' }\n};\nconst HORIZON_DAYS = 90;\nconst SHORTFALL_BELOW = 0;   // balance under £0 = shortfall (high)\nconst WATCH_BELOW = 50;      // balance under £50 = thin cushion (watch)\nconst BAD_WEEK_FACTOR = 0.85; // \"one bad week\": that week's income 15% lower\nconst addDays = (d, n) => { const x = new Date(d); x.setUTCDate(x.getUTCDate() + n); return x; };\nconst iso = d => d.toISOString().slice(0, 10);\nconst round = n => Math.round(n);\nconst median = a => { const s = [...a].sort((x, y) => x - y), m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };\nfunction projectWeeklyIncome(history, w) {\n  return 0.5 * median(history.slice(-8)) + 0.5 * history[w % history.length];\n}\nfunction nextDate(start, month, day) {\n  let y = start.getUTCFullYear(), d = new Date(Date.UTC(y, month - 1, day));\n  if (d < start) d = new Date(Date.UTC(y + 1, month - 1, day));\n  return d;\n}\nfunction billsOnDay(recurring, d, opts) {\n  const day = d.getUTCDate(), month = d.getUTCMonth() + 1, out = [];\n  for (const r of recurring) {\n    const spread = opts.spread_yearly && opts.spread_yearly.includes(r.id) && r.cadence === 'yearly';\n    if (spread && day === r.day && d >= nextDate(opts._start, r.month, r.day)) out.push({ ...r, label: r.label.replace(' (yearly)', '') + ' (monthly instalment)', amount: round(r.amount * (opts.spread_markup || 1.08) / 12) });\n    else if (!spread && r.cadence === 'monthly' && r.day === day && (!r.months || r.months.includes(month))) out.push(r);\n    else if (!spread && r.cadence === 'yearly' && r.month === month && r.day === day) out.push(r);\n  }\n  return out;\n}\nfunction forecast(persona, opts = {}) {\n  const start = new Date(persona.as_of + 'T00:00:00Z');\n  opts = { ...opts, _start: start };\n  const hist = persona.income.history_weekly;\n  const usual = median(hist.slice(-8));\n  const setAside = opts.set_aside_per_good_week || 0; // spend this much less in weeks above usual income\n  let bal = persona.opening_balance, setAsideTotal = 0;\n  const days = [], weeks = [];\n  let week;\n  for (let i = 0; i < HORIZON_DAYS; i++) {\n    const d = addDays(start, i), w = Math.floor(i / 7);\n    if (i % 7 === 0) {\n      const income = projectWeeklyIncome(hist, w);\n      const good = income >= usual;\n      bal += income;\n      week = { week_start: iso(d), income: round(income), good_week: good, bills: [],\n               daily_spend: (persona.everyday_spend_weekly - (good ? setAside : 0)) / 7,\n               bad_week_hit: income * (1 - BAD_WEEK_FACTOR) };\n      if (good) setAsideTotal += setAside;\n      weeks.push(week);\n    }\n    for (const b of billsOnDay(persona.recurring, d, opts)) {\n      bal -= b.amount;\n      week.bills.push({ id: b.id, label: b.label, amount: b.amount, date: iso(d) });\n    }\n    bal -= week.daily_spend;\n    days.push({ date: iso(d), balance: round(bal), bad_week_balance: round(bal - week.bad_week_hit) });\n  }\n  const risks = [];\n  weeks.forEach((wk, w) => {\n    const slice = days.slice(w * 7, w * 7 + 7);\n    const lowest = slice.reduce((a, b) => (b.balance < a.balance ? b : a));\n    const lowestBad = Math.min(...slice.map(x => x.bad_week_balance));\n    let severity = null;\n    if (lowest.balance < SHORTFALL_BELOW) severity = 'high';\n    else if (lowest.balance < WATCH_BELOW || lowestBad < SHORTFALL_BELOW) severity = 'watch';\n    if (!severity) return;\n    risks.push({\n      id: `risk_${wk.week_start}`,\n      week_start: wk.week_start,\n      severity,\n      shortfall: Math.max(0, SHORTFALL_BELOW - lowest.balance),\n      bad_week_shortfall: Math.max(0, SHORTFALL_BELOW - lowestBad),\n      lowest_day: lowest.date,\n      lowest_balance: lowest.balance,\n      drivers: [\n        ...wk.bills.map(b => ({ type: 'bill', label: b.label, amount: b.amount, date: b.date })),\n        { type: 'income', label: 'Expected income this week', amount: wk.income, vs_usual: round(wk.income - usual),\n          evidence: `Same week last year you earned £${hist[w % hist.length]}` }\n      ]\n    });\n  });\n  return {\n    persona_id: persona.persona_id,\n    as_of: persona.as_of,\n    horizon_days: HORIZON_DAYS,\n    currency: persona.currency,\n    method: 'Weekly income = 50% median of last 8 weeks + 50% same week last year. Bills from the recurring schedule. Everyday spend spread evenly per day. Bad-week line = that week earning 15% less.',\n    usual_weekly_income: round(usual),\n    scenario: { set_aside_per_good_week: setAside, spread_yearly: opts.spread_yearly || [], total_set_aside: setAsideTotal },\n    end_balance: days[days.length - 1].balance,\n    days,\n    weeks: weeks.map(({ daily_spend, bad_week_hit, ...w }, i) => ({ ...w, end_balance: days[Math.min(days.length - 1, i * 7 + 6)].balance })),\n    risks,\n    headline_risk: risks.find(r => r.severity === 'high') || risks[0] || null\n  };\n}\nconst body = $input.first().json.body || {};\nconst language = body.language || 'en';\nconst persona = PERSONAS[body.persona_id || 'amira'];\nconst userText = (body.input && body.input.text) || '';\nconst base = forecast(persona);\nconst risk = base.headline_risk;\nconst runs = {\n  set_aside: { title: 'Put £20 aside in your busy weeks before Christmas', scenario: { set_aside_per_good_week: 20 } },\n  spread_insurance: { title: 'Ask your insurer to pay monthly when it renews on 10 Feb (about £38 a month, a bit dearer overall)', scenario: { spread_yearly: ['insurance'] } },\n  both: { title: 'Do both', scenario: { set_aside_per_good_week: 20, spread_yearly: ['insurance'] } }\n};\nconst OPTIONS = {};\nfor (const [id, o] of Object.entries(runs)) {\n  const f = forecast(persona, o.scenario);\n  const r = f.risks.find(x => x.week_start === risk.week_start && x.severity === 'high');\n  const lowest = Math.min(...f.days.map(d => d.balance));\n  OPTIONS[id] = { id, title: o.title, scenario: o.scenario,\n    shortfall_after: r ? r.shortfall : 0, lowest_balance_after: lowest,\n    effect: r ? `Gap shrinks from £${risk.shortfall} to £${r.shortfall}` : `No short week; lowest balance £${lowest}` };\n}\nconst facts = {\n  name: persona.display_name, language, usual_weekly_income: base.usual_weekly_income,\n  risk: { week_start: risk.week_start, shortfall: risk.shortfall, lowest_day: risk.lowest_day, drivers: risk.drivers },\n  OPTIONS, signposts: SIGNPOSTS\n};\nconst history = (body.history || []).slice(-6).map(h => ({ role: h.role === 'user' ? 'user' : 'assistant', content: h.text }));\nconst system = \"You are \\\"Future You\\\", a friendly AI money coach inside a budgeting app for people on irregular incomes and people new to the UK. You are an AI and say so if asked. You are NOT a regulated financial adviser.\\n\\nRespond in the language with code {language}. Use Modern Standard Arabic for \\\"ar\\\". Also return an English version for subtitles.\\n\\nINPUT: FACTS (forecast, risk, OPTIONS with pre-computed effects, signposts) and the conversation so far. The user spoke; their words were transcribed and may contain errors.\\n\\nRULES\\n1. Numbers: use ONLY figures in FACTS. Never do maths. If the user asks about an option not in OPTIONS, say you can't calculate that yet and suggest talking to a free adviser.\\n2. Reply in at most 3 short sentences (max 60 words), spoken style, reading age 9. One idea per sentence. Ask at most one question.\\n3. Suggest only actions from OPTIONS. Explain why each helps in one sentence.\\n4. Always include at least one signpost id from FACTS.signposts in \\\"signpost_ids\\\".\\n5. Never recommend borrowing, credit cards, payday loans, Buy Now Pay Later, investments or specific providers. Never say \\\"guaranteed\\\" or \\\"you will\\\". Use \\\"the forecast suggests\\\".\\n6. Non-judgemental: never comment on spending choices, remittances to family, religion or culture. Sending money home is a fixed commitment, not a problem to cut.\\n7. If the user mentions not affording food or rent now, threats from creditors, gambling harm, or feeling hopeless or unsafe: set \\\"escalate\\\": true, reply with care, and point to free help (Citizens Advice, StepChange; Samaritans on 116 123 for emotional crisis). Do not continue budgeting advice in that turn.\\n8. If you did not understand the transcript, say so kindly and ask them to repeat.\\n9. Never ask for passwords, card numbers or bank login details.\\n\\nOUTPUT JSON only, no code fences:\\n{\\\"reply_text\\\": \\\"...in {language}...\\\", \\\"reply_en\\\": \\\"...\\\", \\\"option_ids\\\": [\\\"set_aside\\\"], \\\"signpost_ids\\\": [\\\"stepchange\\\"], \\\"escalate\\\": false}\".split('{language}').join(language);\nconst messages = [...history, { role: 'user', content: 'FACTS: ' + JSON.stringify(facts) + '\\n\\nUSER SAID: ' + (userText || '(nothing)') }];\nwhile (messages.length && messages[0].role !== 'user') messages.shift();\nreturn [{ json: { facts, user_transcript: userText, language,\n  anthropic_body: { model: 'claude-haiku-5-5', max_tokens: 400, system, messages } } }];"
+      }
+    },
+    {
+      "name": "Ask Claude",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        0
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "name": "Anthropic account"
+        }
+      },
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify(Object.assign({}, $json.anthropic_body, { max_tokens: 1024, thinking: { type: 'disabled' }, system: $json.anthropic_body.system + '\\n\\nDATES: Today is 16 November 2026 (FACTS as_of). The risk week starts on FACTS.risk.week_start, which is in February 2027. Say \"in February\" or \"the week of 8 February\". Never say \"next week\".' })) }}",
+        "options": {
+          "timeout": 45000
+        }
+      }
+    },
+    {
+      "name": "Guard reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const facts = $('Build FACTS').first().json.facts;\nconst userTranscript = $('Build FACTS').first().json.user_transcript;\nconst claudeRes = $input.first().json;\nconst textBlock = (claudeRes.content || []).find(b => b.type === 'text') || {};\nconst raw = textBlock.text || '';\nlet out;\ntry { out = JSON.parse(raw.replace(/^\\s*```(json)?/, '').replace(/```\\s*$/, '')); } catch (e) { out = null; }\n\n// Every £ figure the model wrote must exist in FACTS (code computed them, not the AI).\nconst allowed = new Set(JSON.stringify(facts).match(/\\d+/g));\nconst used = ((out && out.reply_en) || '').match(/£\\s?(\\d+)/g) || [];\nconst badNumber = used.some(m => !allowed.has(m.replace(/\\D/g, '')));\n\nif (!out || badNumber) {\n  const fb = { en: 'Sorry, I could not work that out safely. The forecast shows a hard week coming. Citizens Advice and StepChange can help for free.',\n               ar: 'عذرًا، لم أستطع الإجابة بدقة. التوقعات تُظهر أسبوعًا صعبًا قادمًا. منظمة Citizens Advice و StepChange تساعدان مجانًا.' };\n  out = { reply_text: fb[facts.language] || fb.en, reply_en: fb.en, option_ids: [], signpost_ids: ['citizens_advice', 'stepchange'], escalate: false, guarded: true, guard_reason: !out ? 'unparseable' : 'invented_number' };\n}\nlet signIds = (out.signpost_ids || []).filter(id => facts.signposts[id]);\nif (out.escalate) signIds = ['citizens_advice', 'stepchange', ...signIds];\nif (!signIds.length) signIds = ['citizens_advice'];\nconst opts = (out.option_ids || []).filter(id => facts.OPTIONS[id]);\nconst plan = opts.map(id => ({ id, title: facts.OPTIONS[id].title, effect: facts.OPTIONS[id].effect }));\nconst scenario = opts.length ? facts.OPTIONS[opts.includes('both') || opts.length > 1 ? 'both' : opts[0]].scenario : null;\nreturn [{ json: {\n  user_transcript: userTranscript,\n  reply_text: out.reply_text, reply_en: out.reply_en,\n  audio_base64: null, audio_url: null, mime: 'audio/mpeg',\n  plan, scenario,\n  signposts: [...new Set(signIds)].map(id => facts.signposts[id]),\n  escalate: !!out.escalate, guarded: !!out.guarded, guard_reason: out.guard_reason || null,\n  disclaimer: 'AI coach. Not regulated financial advice.'\n} }];"
+      }
+    },
+    {
+      "name": "Respond to app",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        896,
+        0
+      ],
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "POST /coach": {
+      "main": [
+        [
+          {
+            "node": "Build FACTS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build FACTS": {
+      "main": [
+        [
+          {
+            "node": "Ask Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Claude": {
+      "main": [
+        [
+          {
+            "node": "Guard reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard reply": {
+      "main": [
+        [
+          {
+            "node": "Respond to app",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "note": "Exported from the live futureyou.app.n8n.cloud workflow source. On import, re-select the Anthropic credential on each Claude node. No secrets are stored in this file."
+  }
+}
