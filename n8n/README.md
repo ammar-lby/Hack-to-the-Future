@@ -8,7 +8,7 @@ To find a URL yourself: open the workflow in n8n, double-click the first (Webhoo
 
 | Endpoint | Request | Response | Tested |
 |---|---|---|---|
-| `https://futureyou.app.n8n.cloud/webhook/forecast` | `{}` or `{ options: { billChanges } }` or `{ canIAfford: { date, amount, name } }` | output of `forecast()` / `canIAfford()` | £143 short in slow weeks from w/c 4 Jan; fix "Save £16 a week for 9 weeks" |
+| `https://futureyou.app.n8n.cloud/webhook/forecast` | `{}`, `{ options: { billChanges, payChanges } }`, `{ canIAfford: { date, amount, name } }`, `{ simulate: "next_week" }` or `{ bufferPot: true }` (last two need the updated Code node) | output of `forecast()` / `canIAfford()` / `simulateNextWeek()` / `bufferPot()`; each risk now has a `why` breakdown | £143 short in slow weeks from w/c 4 Jan; fix "Save £16 a week for 9 weeks" |
 | `https://futureyou.app.n8n.cloud/webhook/coach` | `{ messages: [{ role, content }], language, options? }` | `{ text, text_en, audio, plan, forecast_options, signposts, escalate, disclaimer }` | Arabic reply to Adam (masculine) in 4.4 s; refuses payday loans |
 | `https://futureyou.app.n8n.cloud/webhook/future-message` | `{ language, risk?, options?, demo_mode? }` | `{ text, text_en, audio, audio_url, risk, disclosure_text, dir, cached, guarded }` | Live Arabic in 7.5 s; `demo_mode: true` returns the approved cached script instantly |
 
